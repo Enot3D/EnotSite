@@ -17,6 +17,17 @@ function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function checkAndSetFirstAdmin(userId) {
+    return db.collection('users').where('role', '==', 'admin').limit(1).get().then(function(snapshot) {
+        if (snapshot.empty) {
+            return db.collection('users').doc(userId).update({ role: 'admin' }).then(function() {
+                return true;
+            });
+        }
+        return false;
+    });
+}
+
 function initAuth() {
     var modal = document.getElementById('auth-modal');
     if (!modal) return;
@@ -46,14 +57,20 @@ function initAuth() {
         var pass = document.getElementById('login-password').value;
         if (!email || !pass) { alert('Заполните все поля'); return; }
 
-        var hashedPass = hashPassword(pass);
-        var users = JSON.parse(localStorage.getItem('enotspace_users') || '[]');
-        var user = users.find(function(u) { return u.email === email || u.phone === email; });
-        if (!user || user.password !== hashedPass) { alert('Неверный email или пароль'); return; }
-
-        localStorage.setItem('enotspace_current_user', JSON.stringify(user));
-        closeAuth();
-        updateAuthUI();
+        auth.signInWithEmailAndPassword(email, pass).then(function(cred) {
+            return db.collection('users').doc(cred.user.uid).get();
+        }).then(function(doc) {
+            if (doc.exists) {
+                var userData = doc.data();
+                userData.id = cred.user.uid;
+                userData.email = cred.user.email;
+                localStorage.setItem('enotspace_current_user', JSON.stringify(userData));
+                closeAuth();
+                updateAuthUI();
+            }
+        }).catch(function(err) {
+            alert('Ошибка входа: ' + err.message);
+        });
     });
 
     document.getElementById('register-submit').addEventListener('click', function() {
@@ -68,19 +85,35 @@ function initAuth() {
         if (email && !validateEmail(email)) { alert('Введите корректный email'); return; }
         if (pass.length < 6) { alert('Пароль минимум 6 символов'); return; }
 
-        var users = JSON.parse(localStorage.getItem('enotspace_users') || '[]');
-        if (users.find(function(u) { return u.email === email || u.phone === phone; })) {
-            alert('Пользователь уже существует'); return;
-        }
+        if (!email) email = phone + '@enotspace.local';
 
-        var hashedPass = hashPassword(pass);
-        var user = { id: 'USR-' + Date.now(), name: name, phone: phone, email: email, password: hashedPass, createdAt: new Date().toISOString() };
-        users.push(user);
-        localStorage.setItem('enotspace_users', JSON.stringify(users));
-        localStorage.setItem('enotspace_current_user', JSON.stringify(user));
-
-        closeAuth();
-        updateAuthUI();
+        auth.createUserWithEmailAndPassword(email, pass).then(function(cred) {
+            var userProfile = {
+                name: name,
+                phone: phone,
+                email: email,
+                role: 'client',
+                createdAt: new Date().toISOString(),
+                purchased: [],
+                favorites: []
+            };
+            return db.collection('users').doc(cred.user.uid).set(userProfile).then(function() {
+                return checkAndSetFirstAdmin(cred.user.uid);
+            }).then(function(wasAdmin) {
+                if (wasAdmin) userProfile.role = 'admin';
+                userProfile.id = cred.user.uid;
+                localStorage.setItem('enotspace_current_user', JSON.stringify(userProfile));
+                closeAuth();
+                updateAuthUI();
+                if (wasAdmin) alert('Вы назначены администратором!');
+            });
+        }).catch(function(err) {
+            if (err.code === 'auth/email-already-in-use') {
+                alert('Пользователь с таким email уже существует');
+            } else {
+                alert('Ошибка регистрации: ' + err.message);
+            }
+        });
     });
 }
 
@@ -106,12 +139,14 @@ function getCurrentUser() {
 }
 
 function logout() {
-    localStorage.removeItem('enotspace_current_user');
-    notifRendered = false;
-    var oldBtn = document.getElementById('notif-btn');
-    if (oldBtn) oldBtn.remove();
-    updateAuthUI();
-    navigate('catalog');
+    auth.signOut().then(function() {
+        localStorage.removeItem('enotspace_current_user');
+        notifRendered = false;
+        var oldBtn = document.getElementById('notif-btn');
+        if (oldBtn) oldBtn.remove();
+        updateAuthUI();
+        navigate('catalog');
+    });
 }
 
 function updateAuthUI() {
@@ -154,7 +189,9 @@ function initAccount() {
     document.getElementById('account-logout').addEventListener('click', logout);
 
     var goCatalogBtn = document.getElementById('go-catalog');
-    if (goCatalogBtn) goCatalogBtn.addEventListener('click', function() { navigate('catalog'); });
+    if (goCatalogBtn) {
+        goCatalogBtn.addEventListener('click', function() { navigate('catalog'); });
+    }
 
     if (isAdmin(user)) {
         setupAdminTabs();
@@ -189,10 +226,12 @@ function initAccount() {
 
         localStorage.setItem('enotspace_current_user', JSON.stringify(user));
 
-        var users = JSON.parse(localStorage.getItem('enotspace_users') || '[]');
-        var idx = users.findIndex(function(u) { return u.id === user.id; });
-        if (idx !== -1) users[idx] = user;
-        localStorage.setItem('enotspace_users', JSON.stringify(users));
+        db.collection('users').doc(user.id).update({
+            name: newName,
+            phone: newPhone,
+            email: newEmail,
+            telegram: newTelegram
+        });
 
         document.getElementById('account-name').textContent = user.name;
         document.getElementById('account-avatar').textContent = escapeHtml(user.name.charAt(0).toUpperCase());
@@ -207,203 +246,204 @@ function initAccount() {
 }
 
 function renderOrders() {
-    var projects = JSON.parse(localStorage.getItem('enotspace_projects') || '[]');
+    var user = getCurrentUser();
+    if (!user) return;
+
     var container = document.getElementById('account-orders');
     var detail = document.getElementById('order-detail');
     if (detail) detail.style.display = 'none';
     if (container) container.style.display = '';
 
-    if (projects.length === 0) {
-        container.innerHTML =
-            '<div class="account-empty">' +
-            '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
-            '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>' +
-            '<polyline points="14 2 14 8 20 8"/>' +
-            '</svg>' +
-            '<p>У вас пока нет заказов</p>' +
-            '<button class="account-empty__btn" id="go-catalog">Перейти в каталог</button>' +
-            '</div>';
-    var goCatalogBtn = document.getElementById('go-catalog');
-    if (goCatalogBtn) {
-        goCatalogBtn.addEventListener('click', function() { navigate('catalog'); });
-    }
-        return;
-    }
-
-    var statusNames = { new: 'Новый', in_progress: 'В работе', completed: 'Готово', cancelled: 'Отменён' };
-    var typeNames = { fullcycle: 'Полный цикл', print: 'Печать по модели', modeling: 'Моделирование', scanning: 'Сканирование' };
-
-    var html = '';
-    projects.forEach(function(project, index) {
-        var statusClass = 'order-card__status--' + project.status;
-        var date = new Date(project.createdAt).toLocaleDateString('ru-RU');
-
-        html += '<div class="order-card" data-order="' + index + '">';
-        html += '<div class="order-card__header">';
-        html += '<span class="order-card__id">' + escapeHtml(project.id) + '</span>';
-        html += '<span class="order-card__date">' + escapeHtml(date) + '</span>';
-        html += '</div>';
-        html += '<span class="order-card__status ' + statusClass + '">' + escapeHtml(statusNames[project.status] || project.status) + '</span>';
-        html += '<div class="order-card__type">' + escapeHtml(typeNames[project.type] || project.type || 'Заказ') + '</div>';
-
-        if (project.timeline && project.timeline.length) {
-            html += '<div class="order-card__timeline">';
-            project.timeline.forEach(function(item) {
-                var itemDate = new Date(item.date).toLocaleString('ru-RU');
-                html += '<div class="timeline-item">';
-                html += '<div class="timeline-item__text">' + escapeHtml(item.text) + '</div>';
-                html += '<div class="timeline-item__date">' + escapeHtml(itemDate) + '</div>';
-                html += '</div>';
-            });
-            html += '</div>';
-        }
-
-        html += '<div class="order-card__hint">Нажмите для подробностей &rarr;</div>';
-
-        if (project.status === 'completed') {
-            html += '<button class="order-card__repeat-btn" data-order="' + index + '">Заказать снова</button>';
-        }
-
-        html += '</div>';
-    });
-
-    container.innerHTML = html;
-
-    container.querySelectorAll('.order-card[data-order]').forEach(function(card) {
-        card.addEventListener('click', function(e) {
-            if (e.target.closest('.order-card__repeat-btn')) return;
-            var idx = parseInt(card.dataset.order);
-            showOrderDetail(idx);
+    db.collection('projects').where('userId', '==', user.id).orderBy('createdAt', 'desc').get().then(function(snapshot) {
+        var projects = [];
+        snapshot.forEach(function(doc) {
+            projects.push(Object.assign({ id: doc.id }, doc.data()));
         });
-    });
 
-    container.querySelectorAll('.order-card__repeat-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            repeatOrder(parseInt(btn.dataset.order));
+        if (projects.length === 0) {
+            container.innerHTML =
+                '<div class="account-empty">' +
+                '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+                '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>' +
+                '<polyline points="14 2 14 8 20 8"/>' +
+                '</svg>' +
+                '<p>У вас пока нет заказов</p>' +
+                '<button class="account-empty__btn" id="go-catalog">Перейти в каталог</button>' +
+                '</div>';
+            document.getElementById('go-catalog').addEventListener('click', function() { navigate('catalog'); });
+            return;
+        }
+
+        var statusNames = { new: 'Новый', in_progress: 'В работе', completed: 'Готово', cancelled: 'Отменён' };
+        var typeNames = { fullcycle: 'Полный цикл', print: 'Печать по модели', modeling: 'Моделирование', scanning: 'Сканирование' };
+
+        var html = '';
+        projects.forEach(function(project, index) {
+            var statusClass = 'order-card__status--' + project.status;
+            var date = new Date(project.createdAt).toLocaleDateString('ru-RU');
+
+            html += '<div class="order-card" data-order="' + index + '">';
+            html += '<div class="order-card__header">';
+            html += '<span class="order-card__id">' + escapeHtml(project.id) + '</span>';
+            html += '<span class="order-card__date">' + escapeHtml(date) + '</span>';
+            html += '</div>';
+            html += '<span class="order-card__status ' + statusClass + '">' + escapeHtml(statusNames[project.status] || project.status) + '</span>';
+            html += '<div class="order-card__type">' + escapeHtml(typeNames[project.type] || project.type || 'Заказ') + '</div>';
+
+            if (project.timeline && project.timeline.length) {
+                html += '<div class="order-card__timeline">';
+                project.timeline.forEach(function(item) {
+                    var itemDate = new Date(item.date).toLocaleString('ru-RU');
+                    html += '<div class="timeline-item">';
+                    html += '<div class="timeline-item__text">' + escapeHtml(item.text) + '</div>';
+                    html += '<div class="timeline-item__date">' + escapeHtml(itemDate) + '</div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+
+            html += '<div class="order-card__hint">Нажмите для подробностей &rarr;</div>';
+
+            if (project.status === 'completed') {
+                html += '<button class="order-card__repeat-btn" data-order="' + index + '">Заказать снова</button>';
+            }
+
+            html += '</div>';
+        });
+
+        container.innerHTML = html;
+
+        container.querySelectorAll('.order-card[data-order]').forEach(function(card) {
+            card.addEventListener('click', function(e) {
+                if (e.target.closest('.order-card__repeat-btn')) return;
+                var idx = parseInt(card.dataset.order);
+                showOrderDetail(idx);
+            });
+        });
+
+        container.querySelectorAll('.order-card__repeat-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                repeatOrder(parseInt(btn.dataset.order));
+            });
         });
     });
 }
 
 function showOrderDetail(index) {
-    var projects = JSON.parse(localStorage.getItem('enotspace_projects') || '[]');
-    var project = projects[index];
-    if (!project) return;
+    var user = getCurrentUser();
+    if (!user) return;
 
-    var container = document.getElementById('account-orders');
-    var detail = document.getElementById('order-detail');
-    container.style.display = 'none';
-    detail.style.display = 'block';
+    db.collection('projects').where('userId', '==', user.id).orderBy('createdAt', 'desc').get().then(function(snapshot) {
+        var projects = [];
+        snapshot.forEach(function(doc) {
+            projects.push(Object.assign({ id: doc.id }, doc.data()));
+        });
 
-    var statusNames = { new: 'Новый', in_progress: 'В работе', completed: 'Готово', cancelled: 'Отменён' };
-    var typeNames = { fullcycle: 'Полный цикл', print: 'Печать по модели', modeling: 'Моделирование', scanning: 'Сканирование' };
-    var urgencyNames = { standard: 'Стандарт (5-7 дней)', fast: 'Быстро (2-3 дня)', express: 'Экспресс (1 день)' };
-    var statusClass = 'order-card__status--' + project.status;
-    var date = new Date(project.createdAt).toLocaleString('ru-RU');
+        var project = projects[index];
+        if (!project) return;
 
-    var html = '';
-    html += '<button class="order-detail__back" id="order-back">&larr; Назад</button>';
+        var container = document.getElementById('account-orders');
+        var detail = document.getElementById('order-detail');
+        container.style.display = 'none';
+        detail.style.display = 'block';
 
-    html += '<div class="order-detail__card">';
-    html += '<div class="order-detail__header">';
-    html += '<div><h2 class="order-detail__id">' + escapeHtml(project.id) + '</h2>';
-    html += '<span class="order-detail__date">' + escapeHtml(date) + '</span></div>';
-    html += '<span class="order-card__status ' + statusClass + '">' + escapeHtml(statusNames[project.status] || project.status) + '</span>';
-    html += '</div>';
+        var statusNames = { new: 'Новый', in_progress: 'В работе', completed: 'Готово', cancelled: 'Отменён' };
+        var typeNames = { fullcycle: 'Полный цикл', print: 'Печать по модели', modeling: 'Моделирование', scanning: 'Сканирование' };
+        var urgencyNames = { standard: 'Стандарт (5-7 дней)', fast: 'Быстро (2-3 дня)', express: 'Экспресс (1 день)' };
+        var statusClass = 'order-card__status--' + project.status;
+        var date = new Date(project.createdAt).toLocaleString('ru-RU');
 
-    html += '<div class="order-detail__info">';
-    html += '<h3>Информация о заказе</h3>';
-    html += '<div class="order-detail__grid">';
-    html += '<div class="order-detail__field"><span>Тип</span><strong>' + escapeHtml(typeNames[project.type] || project.type || 'Заказ') + '</strong></div>';
-    if (project.urgency) html += '<div class="order-detail__field"><span>Срочность</span><strong>' + escapeHtml(urgencyNames[project.urgency] || project.urgency) + '</strong></div>';
-    if (project.quantity) html += '<div class="order-detail__field"><span>Количество</span><strong>' + parseInt(project.quantity) + ' шт.</strong></div>';
-    if (project.color) html += '<div class="order-detail__field"><span>Цвет</span><strong>' + escapeHtml(project.color) + '</strong></div>';
-    if (project.file) html += '<div class="order-detail__field"><span>Файл</span><strong>' + escapeHtml(project.file) + '</strong></div>';
-    if (project.material) html += '<div class="order-detail__field"><span>Материал</span><strong>' + escapeHtml(project.material) + '</strong></div>';
-    if (project.price) html += '<div class="order-detail__field"><span>Стоимость</span><strong>' + escapeHtml(String(project.price)) + ' ₽</strong></div>';
-    html += '</div></div>';
+        var html = '';
+        html += '<button class="order-detail__back" id="order-back">&larr; Назад</button>';
 
-    if (project.description) {
-        html += '<div class="order-detail__section">';
-        html += '<h3>Описание</h3>';
-        html += '<p>' + escapeHtml(project.description) + '</p>';
+        html += '<div class="order-detail__card">';
+        html += '<div class="order-detail__header">';
+        html += '<div><h2 class="order-detail__id">' + escapeHtml(project.id) + '</h2>';
+        html += '<span class="order-detail__date">' + escapeHtml(date) + '</span></div>';
+        html += '<span class="order-card__status ' + statusClass + '">' + escapeHtml(statusNames[project.status] || project.status) + '</span>';
         html += '</div>';
-    }
 
-    if (project.contact) {
-        html += '<div class="order-detail__section">';
-        html += '<h3>Контакты</h3>';
+        html += '<div class="order-detail__info">';
+        html += '<h3>Информация о заказе</h3>';
         html += '<div class="order-detail__grid">';
-        if (project.contact.name) html += '<div class="order-detail__field"><span>Имя</span><strong>' + escapeHtml(project.contact.name) + '</strong></div>';
-        if (project.contact.phone) html += '<div class="order-detail__field"><span>Телефон</span><strong>' + escapeHtml(project.contact.phone) + '</strong></div>';
-        if (project.contact.telegram) html += '<div class="order-detail__field"><span>Telegram</span><strong>' + escapeHtml(project.contact.telegram) + '</strong></div>';
-        if (project.contact.email) html += '<div class="order-detail__field"><span>Email</span><strong>' + escapeHtml(project.contact.email) + '</strong></div>';
+        html += '<div class="order-detail__field"><span>Тип</span><strong>' + escapeHtml(typeNames[project.type] || project.type || 'Заказ') + '</strong></div>';
+        if (project.urgency) html += '<div class="order-detail__field"><span>Срочность</span><strong>' + escapeHtml(urgencyNames[project.urgency] || project.urgency) + '</strong></div>';
+        if (project.quantity) html += '<div class="order-detail__field"><span>Количество</span><strong>' + parseInt(project.quantity) + ' шт.</strong></div>';
+        if (project.material) html += '<div class="order-detail__field"><span>Материал</span><strong>' + escapeHtml(project.material) + '</strong></div>';
+        if (project.file) html += '<div class="order-detail__field"><span>Файл</span><strong>' + escapeHtml(project.file) + '</strong></div>';
+        if (project.price) html += '<div class="order-detail__field"><span>Стоимость</span><strong>' + escapeHtml(String(project.price)) + ' ₽</strong></div>';
         html += '</div></div>';
-    }
 
-    if (project.timeline && project.timeline.length) {
-        html += '<div class="order-detail__section">';
-        html += '<h3>Хроника заказа</h3>';
-        html += '<div class="order-detail__timeline">';
-        project.timeline.forEach(function(item) {
-            var itemDate = new Date(item.date).toLocaleString('ru-RU');
-            html += '<div class="timeline-item">';
-            html += '<div class="timeline-item__text">' + escapeHtml(item.text) + '</div>';
-            html += '<div class="timeline-item__date">' + escapeHtml(itemDate) + '</div>';
-            html += '</div>';
-        });
-        html += '</div></div>';
-    }
+        if (project.description) {
+            html += '<div class="order-detail__section"><h3>Описание</h3><p>' + escapeHtml(project.description) + '</p></div>';
+        }
 
-    if (project.messages && project.messages.length) {
-        html += '<div class="order-detail__section">';
-        html += '<h3>Сообщения</h3>';
-        html += '<div class="order-detail__chat">';
-        project.messages.forEach(function(msg) {
-            var isUser = msg.from === 'user';
-            html += '<div class="chat-msg ' + (isUser ? 'chat-msg--user' : 'chat-msg--admin') + '">';
-            html += '<div class="chat-msg__text">' + escapeHtml(msg.text) + '</div>';
-            html += '<div class="chat-msg__date">' + escapeHtml(new Date(msg.date).toLocaleString('ru-RU')) + '</div>';
+        if (project.contact) {
+            html += '<div class="order-detail__section"><h3>Контакты</h3><div class="order-detail__grid">';
+            if (project.contact.name) html += '<div class="order-detail__field"><span>Имя</span><strong>' + escapeHtml(project.contact.name) + '</strong></div>';
+            if (project.contact.phone) html += '<div class="order-detail__field"><span>Телефон</span><strong>' + escapeHtml(project.contact.phone) + '</strong></div>';
+            if (project.contact.telegram) html += '<div class="order-detail__field"><span>Telegram</span><strong>' + escapeHtml(project.contact.telegram) + '</strong></div>';
+            if (project.contact.email) html += '<div class="order-detail__field"><span>Email</span><strong>' + escapeHtml(project.contact.email) + '</strong></div>';
+            html += '</div></div>';
+        }
+
+        if (project.timeline && project.timeline.length) {
+            html += '<div class="order-detail__section"><h3>Хроника заказа</h3><div class="order-detail__timeline">';
+            project.timeline.forEach(function(item) {
+                var itemDate = new Date(item.date).toLocaleString('ru-RU');
+                html += '<div class="timeline-item"><div class="timeline-item__text">' + escapeHtml(item.text) + '</div><div class="timeline-item__date">' + escapeHtml(itemDate) + '</div></div>';
+            });
+            html += '</div></div>';
+        }
+
+        if (project.messages && project.messages.length) {
+            html += '<div class="order-detail__section"><h3>Сообщения</h3><div class="order-detail__chat">';
+            project.messages.forEach(function(msg) {
+                var isUser = msg.from === 'user';
+                html += '<div class="chat-msg ' + (isUser ? 'chat-msg--user' : 'chat-msg--admin') + '">';
+                html += '<div class="chat-msg__text">' + escapeHtml(msg.text) + '</div>';
+                html += '<div class="chat-msg__date">' + escapeHtml(new Date(msg.date).toLocaleString('ru-RU')) + '</div>';
+                html += '</div>';
+            });
             html += '</div>';
-        });
+            html += '<div class="order-detail__chat-input">';
+            html += '<input type="text" class="order-detail__chat-field" id="chat-input" placeholder="Сообщение...">';
+            html += '<button class="order-detail__chat-send" id="chat-send">Отправить</button>';
+            html += '</div></div>';
+        } else {
+            html += '<div class="order-detail__section"><h3>Сообщения</h3>';
+            html += '<div class="order-detail__chat" id="chat-messages"></div>';
+            html += '<div class="order-detail__chat-input">';
+            html += '<input type="text" class="order-detail__chat-field" id="chat-input" placeholder="Сообщение...">';
+            html += '<button class="order-detail__chat-send" id="chat-send">Отправить</button>';
+            html += '</div></div>';
+        }
+
         html += '</div>';
-        html += '<div class="order-detail__chat-input">';
-        html += '<input type="text" class="order-detail__chat-field" id="chat-input" placeholder="Сообщение...">';
-        html += '<button class="order-detail__chat-send" id="chat-send">Отправить</button>';
-        html += '</div></div>';
-    } else {
-        html += '<div class="order-detail__section">';
-        html += '<h3>Сообщения</h3>';
-        html += '<div class="order-detail__chat" id="chat-messages"></div>';
-        html += '<div class="order-detail__chat-input">';
-        html += '<input type="text" class="order-detail__chat-field" id="chat-input" placeholder="Сообщение...">';
-        html += '<button class="order-detail__chat-send" id="chat-send">Отправить</button>';
-        html += '</div></div>';
-    }
 
-    html += '</div>';
+        detail.innerHTML = html;
 
-    detail.innerHTML = html;
+        document.getElementById('order-back').addEventListener('click', function() {
+            detail.style.display = 'none';
+            container.style.display = '';
+        });
 
-    document.getElementById('order-back').addEventListener('click', function() {
-        detail.style.display = 'none';
-        container.style.display = '';
+        var chatInput = document.getElementById('chat-input');
+        var chatSend = document.getElementById('chat-send');
+        if (chatSend && chatInput) {
+            chatSend.addEventListener('click', function() {
+                var text = sanitizeInput(chatInput.value, 500);
+                if (!text) return;
+                if (!project.messages) project.messages = [];
+                project.messages.push({ from: 'user', text: text, date: new Date().toISOString() });
+                db.collection('projects').doc(project.id).update({ messages: project.messages });
+                chatInput.value = '';
+                showOrderDetail(index);
+            });
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') chatSend.click();
+            });
+        }
     });
-
-    var chatInput = document.getElementById('chat-input');
-    var chatSend = document.getElementById('chat-send');
-    if (chatSend && chatInput) {
-        chatSend.addEventListener('click', function() {
-            var text = sanitizeInput(chatInput.value, 500);
-            if (!text) return;
-            if (!project.messages) project.messages = [];
-            project.messages.push({ from: 'user', text: text, date: new Date().toISOString() });
-            localStorage.setItem('enotspace_projects', JSON.stringify(projects));
-            chatInput.value = '';
-            showOrderDetail(index);
-        });
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') chatSend.click();
-        });
-    }
 }

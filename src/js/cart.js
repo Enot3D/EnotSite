@@ -1,32 +1,71 @@
 function initCart() {
     var cart = JSON.parse(localStorage.getItem('enotspace_cart') || '[]');
-    var products = typeof PRODUCTS !== 'undefined' ? PRODUCTS : [];
+    var products = [];
 
-    localStorage.removeItem('enotspace_promo_applied');
+    db.collection('products').get().then(function(snapshot) {
+        snapshot.forEach(function(doc) {
+            products.push(Object.assign({ id: parseInt(doc.id) }, doc.data()));
+        });
 
-    renderCart(cart, products);
-
-    document.getElementById('cart-go-catalog').addEventListener('click', function() {
-        navigate('catalog');
-    });
-
-    document.getElementById('cart-checkout').addEventListener('click', function() {
-        if (cart.length === 0) return;
-
-        if (typeof recordPurchase === 'function') {
-            var productIds = cart.map(function(item) { return item.productId; });
-            recordPurchase(productIds);
-        }
-
-        alert('Заказ оформлен! Мы свяжемся с вами для подтверждения.');
-        localStorage.removeItem('enotspace_cart');
         localStorage.removeItem('enotspace_promo_applied');
-        cart = [];
         renderCart(cart, products);
-        updateCartCount();
-    });
 
-    if (typeof setupPromoCode === 'function') setupPromoCode();
+        document.getElementById('cart-go-catalog').addEventListener('click', function() {
+            navigate('catalog');
+        });
+
+        document.getElementById('cart-checkout').addEventListener('click', function() {
+            if (cart.length === 0) return;
+
+            var user = getCurrentUser();
+            if (!user) { alert('Войдите, чтобы оформить заказ'); openAuth(); return; }
+
+            if (typeof recordPurchase === 'function') {
+                var productIds = cart.map(function(item) { return item.productId; });
+                recordPurchase(productIds);
+            }
+
+            var promoApplied = JSON.parse(localStorage.getItem('enotspace_promo_applied') || 'null');
+            var subtotal = 0;
+            cart.forEach(function(item) {
+                var p = products.find(function(pr) { return pr.id === item.productId; });
+                if (p) subtotal += p.price * item.quantity;
+            });
+            var delivery = subtotal >= 5000 ? 0 : 350;
+            var discount = promoApplied ? promoApplied.discount : 0;
+            var total = subtotal + delivery - discount;
+
+            var orderData = {
+                userId: user.id,
+                contact: { name: user.name, phone: user.phone, email: user.email },
+                items: cart.map(function(item) {
+                    var p = products.find(function(pr) { return pr.id === item.productId; });
+                    return { productId: item.productId, name: p ? p.name : '', quantity: item.quantity, price: p ? p.price : 0 };
+                }),
+                subtotal: subtotal,
+                delivery: delivery,
+                discount: discount,
+                total: total,
+                promoCode: promoApplied ? promoApplied.code : null,
+                status: 'new',
+                type: 'order',
+                createdAt: new Date().toISOString(),
+                messages: [],
+                timeline: [{ status: 'new', date: new Date().toISOString(), text: 'Заказ оформлен' }]
+            };
+
+            db.collection('projects').add(orderData).then(function() {
+                alert('Заказ оформлен! Мы свяжемся с вами для подтверждения.');
+                localStorage.removeItem('enotspace_cart');
+                localStorage.removeItem('enotspace_promo_applied');
+                cart = [];
+                renderCart(cart, products);
+                updateCartCount();
+            });
+        });
+
+        if (typeof setupPromoCode === 'function') setupPromoCode();
+    });
 }
 
 function renderCart(cart, products) {
@@ -47,29 +86,19 @@ function renderCart(cart, products) {
 
     var html = '';
     var subtotal = 0;
-    var colorNames = {
-        any: 'Любой', white: 'Белый', black: 'Чёрный', gray: 'Серый',
-        red: 'Красный', blue: 'Синий', green: 'Зелёный',
-        orange: 'Оранжевый', yellow: 'Жёлтый', transparent: 'Прозрачный'
-    };
 
     cart.forEach(function(item, index) {
-        var product = products.find(function(p) { return p.id === item.productId; });
-        if (!product) return;
+        var p = products.find(function(pr) { return pr.id === item.productId; });
+        if (!p) return;
 
-        var colorName = item.color && product.colors
-            ? (product.colors.find(function(c) { return c.name === item.color; }) || {}).name || item.color
-            : colorNames[item.color] || item.color || '';
-
-        var firstImage = product.colors && product.colors[0] ? product.colors[0].images[0] : '';
-        var itemTotal = product.price * item.quantity;
+        var firstImage = p.colors && p.colors[0] ? p.colors[0].images[0] : '';
+        var itemTotal = p.price * item.quantity;
         subtotal += itemTotal;
 
         html += '<div class="cart-item" data-index="' + index + '">' +
-            '<div class="cart-item__img"><img src="' + escapeAttr(firstImage) + '" alt="' + escapeAttr(product.name) + '" loading="lazy"></div>' +
+            '<div class="cart-item__img"><img src="' + escapeAttr(firstImage) + '" alt="' + escapeAttr(p.name) + '" loading="lazy"></div>' +
             '<div class="cart-item__info">' +
-                '<div class="cart-item__name">' + escapeHtml(product.name) + '</div>' +
-                (colorName ? '<div class="cart-item__variant">Цвет: ' + escapeHtml(colorName) + '</div>' : '') +
+                '<div class="cart-item__name">' + escapeHtml(p.name) + '</div>' +
             '</div>' +
             '<div class="cart-item__actions">' +
                 '<div class="cart-item__counter">' +
