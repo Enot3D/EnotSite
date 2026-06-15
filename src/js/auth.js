@@ -63,9 +63,17 @@ function initAuth() {
                     var userData = doc.data();
                     userData.id = cred.user.uid;
                     userData.email = cred.user.email;
-                    localStorage.setItem('enotspace_current_user', JSON.stringify(userData));
-                    closeAuth();
-                    updateAuthUI();
+
+                    return checkAndSetFirstAdmin(cred.user.uid).then(function(wasAdmin) {
+                        if (wasAdmin) {
+                            userData.role = 'admin';
+                            db.collection('users').doc(cred.user.uid).update({ role: 'admin' });
+                        }
+                        localStorage.setItem('enotspace_current_user', JSON.stringify(userData));
+                        closeAuth();
+                        updateAuthUI();
+                        if (wasAdmin) alert('Вы назначены администратором!');
+                    });
                 } else {
                     alert('Профиль не найден в базе данных');
                 }
