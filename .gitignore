@@ -1,0 +1,21 @@
+# System files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+
+# Firebase
+.firebase/
+firebase-debug.log

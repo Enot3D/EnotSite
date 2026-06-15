@@ -1,0 +1,50 @@
+<div class="auth-modal" id="auth-modal">
+    <div class="auth-modal__overlay" id="auth-overlay"></div>
+    <div class="auth-modal__content">
+
+        <button class="auth-modal__close" id="auth-close">&times;</button>
+
+        <div class="auth-modal__login" id="auth-login-view">
+            <h2 class="auth-modal__title">Вход</h2>
+            <p class="auth-modal__desc">Войдите, чтобы отслеживать заказы</p>
+            <form class="auth-form" id="login-form">
+                <div class="auth-form__group">
+                    <label class="auth-form__label">Телефон или Email</label>
+                    <input class="auth-form__input" type="text" id="login-email" placeholder="+7 (___) ___-__-__ или mail@example.com">
+                </div>
+                <div class="auth-form__group">
+                    <label class="auth-form__label">Пароль</label>
+                    <input class="auth-form__input" type="password" id="login-password" placeholder="Введите пароль">
+                </div>
+                <button type="button" class="auth-form__btn" id="login-submit">Войти</button>
+            </form>
+            <p class="auth-modal__switch">Нет аккаунта? <a href="#" id="show-register">Зарегистрироваться</a></p>
+        </div>
+
+        <div class="auth-modal__register" id="auth-register-view" style="display:none;">
+            <h2 class="auth-modal__title">Регистрация</h2>
+            <p class="auth-modal__desc">Создайте аккаунт для отслеживания заказов</p>
+            <form class="auth-form" id="register-form">
+                <div class="auth-form__group">
+                    <label class="auth-form__label">Имя *</label>
+                    <input class="auth-form__input" type="text" id="reg-name" placeholder="Иван">
+                </div>
+                <div class="auth-form__group">
+                    <label class="auth-form__label">Телефон *</label>
+                    <input class="auth-form__input" type="tel" id="reg-phone" placeholder="+7 (___) ___-__-__">
+                </div>
+                <div class="auth-form__group">
+                    <label class="auth-form__label">Email</label>
+                    <input class="auth-form__input" type="email" id="reg-email" placeholder="mail@example.com">
+                </div>
+                <div class="auth-form__group">
+                    <label class="auth-form__label">Пароль *</label>
+                    <input class="auth-form__input" type="password" id="reg-password" placeholder="Минимум 6 символов">
+                </div>
+                <button type="button" class="auth-form__btn" id="register-submit">Зарегистрироваться</button>
+            </form>
+            <p class="auth-modal__switch">Уже есть аккаунт? <a href="#" id="show-login">Войти</a></p>
+        </div>
+
+    </div>
+</div>

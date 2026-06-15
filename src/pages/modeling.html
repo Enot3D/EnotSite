@@ -1,0 +1,97 @@
+<section class="sp">
+    <div class="sp__hero">
+        <h1 class="sp__title">3D-моделирование</h1>
+        <p class="sp__subtitle">Создадим 3D-модель с нуля по вашему описанию, чертежу или эскизу</p>
+    </div>
+
+    <div class="sp__content">
+
+        <div class="sp__main">
+
+            <div>
+                <h2 class="sp-section__title">Что мы делаем</h2>
+                <div class="sp-features">
+                    <div class="sp-feature">
+                        <div class="sp-feature__icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                        </div>
+                        <div><h3>По чертежу</h3><p>Точное воссоздание по размерам и техническому заданию</p></div>
+                    </div>
+                    <div class="sp-feature">
+                        <div class="sp-feature__icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </div>
+                        <div><h3>По фото</h3><p>Восстанавливаем 3D-модель по фотографиям объекта</p></div>
+                    </div>
+                    <div class="sp-feature">
+                        <div class="sp-feature__icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                        </div>
+                        <div><h3>С нуля</h3><p>Создаём модель по описанию — от идеи до готового файла</p></div>
+                    </div>
+                    <div class="sp-feature">
+                        <div class="sp-feature__icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                        </div>
+                        <div><h3>Доработка</h3><p>Исправляем и улучшаем существующие 3D-модели</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h2 class="sp-section__title">Оформите заявку</h2>
+                <div class="sp-form-wrap">
+                    <form class="sp-form" id="modeling-form">
+                        <div class="fg">
+                            <label class="fl">Опишите задачу *</label>
+                            <textarea class="ft" id="modeling-desc" rows="5" placeholder="Что нужно смоделировать? Есть ли чертежи, размеры, примеры?"></textarea>
+                        </div>
+                        <div class="fr">
+                            <div class="fg">
+                                <label class="fl">Ваше имя *</label>
+                                <input class="fi" type="text" id="modeling-name" placeholder="Иван">
+                            </div>
+                            <div class="fg">
+                                <label class="fl">Телефон *</label>
+                                <input class="fi" type="tel" id="modeling-phone" placeholder="+7 (___) ___-__-__">
+                            </div>
+                        </div>
+                        <div class="fg">
+                            <label class="fl">Telegram</label>
+                            <input class="fi" type="text" id="modeling-telegram" placeholder="@username">
+                        </div>
+                        <div class="fg">
+                            <label class="fl">Приложите чертежи или фото</label>
+                            <div class="sp-upload" id="modeling-upload-zone">
+                                <p class="sp-upload__text">Перетащите файлы сюда</p>
+                                <label class="sp-upload__btn">
+                                    Выберите
+                                    <input type="file" id="modeling-file-input" multiple accept="image/*,.pdf,.dwg,.dxf" hidden>
+                                </label>
+                            </div>
+                            <div class="sp-preview" id="modeling-preview"></div>
+                        </div>
+                        <button type="button" class="sp-submit" id="modeling-submit">Отправить заявку</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="sp__sidebar">
+            <div class="sp-sidebar">
+                <h3 class="sp-sidebar__title">Стоимость</h3>
+                <div class="sp-sidebar__list">
+                    <div class="sp-sidebar__row"><span class="sp-sidebar__row-label">Моделирование</span><span class="sp-sidebar__row-value">от 500 ₽</span></div>
+                    <div class="sp-sidebar__row"><span class="sp-sidebar__row-label">Доработка модели</span><span class="sp-sidebar__row-value">от 300 ₽</span></div>
+                    <div class="sp-sidebar__row"><span class="sp-sidebar__row-label">Сроки</span><span class="sp-sidebar__row-value">1-5 дней</span></div>
+                </div>
+            </div>
+            <div class="sp-sidebar sp-sidebar--note">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <div><strong>Бесплатная консультация</strong><p>Оценим задачу и скажем точную стоимость до начала работы</p></div>
+            </div>
+        </div>
+
+    </div>
+</section>

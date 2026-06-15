@@ -1,0 +1,277 @@
+<section class="project-wizard">
+    <div class="project-wizard__hero">
+        <h1 class="project-wizard__title">Полный цикл</h1>
+        <p class="project-wizard__subtitle">От сломанной детали до готовой замены — мы сделаем всё</p>
+    </div>
+
+    <div class="project-wizard__steps-info">
+        <div class="step-info">
+            <div class="step-info__number">1</div>
+            <div class="step-info__text">
+                <strong>Фото</strong>
+                <span>Загрузите фото детали</span>
+            </div>
+        </div>
+        <div class="step-info__arrow">&rarr;</div>
+        <div class="step-info">
+            <div class="step-info__number">2</div>
+            <div class="step-info__text">
+                <strong>Описание</strong>
+                <span>Расскажите о задаче</span>
+            </div>
+        </div>
+        <div class="step-info__arrow">&rarr;</div>
+        <div class="step-info">
+            <div class="step-info__number">3</div>
+            <div class="step-info__text">
+                <strong>Контакты</strong>
+                <span>Как с вами связаться</span>
+            </div>
+        </div>
+        <div class="step-info__arrow">&rarr;</div>
+        <div class="step-info">
+            <div class="step-info__number">4</div>
+            <div class="step-info__text">
+                <strong>Готово</strong>
+                <span>Мы свяжемся с вами</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="project-wizard__form-wrap">
+        <div class="project-wizard__progress">
+            <div class="project-wizard__progress-bar" id="progress-bar" style="width: 25%"></div>
+        </div>
+
+        <form class="project-wizard__form" id="project-form" novalidate>
+
+            <div class="wizard-step active" data-step="1">
+                <h2 class="wizard-step__title">Загрузите фото детали</h2>
+                <p class="wizard-step__desc">Чем больше фото — тем точнее мы сможем оценить задачу. Подойдут фотографии с разных ракурсов.</p>
+                
+                <div class="upload-zone" id="upload-zone">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <p class="upload-zone__text">Перетащите фото сюда</p>
+                    <p class="upload-zone__subtext">или</p>
+                    <label class="upload-zone__btn">
+                        Выберите файлы
+                        <input type="file" id="file-input" multiple accept="image/*" hidden>
+                    </label>
+                </div>
+
+                <div class="upload-preview" id="upload-preview"></div>
+            </div>
+
+            <div class="wizard-step" data-step="2">
+                <h2 class="wizard-step__title">Опишите задачу</h2>
+                <p class="wizard-step__desc">Расскажите что сломалось, какой результат ожидаете, есть ли чертежи или размеры.</p>
+
+                <div class="form-group">
+                    <label class="form-label">Что нужно сделать? *</label>
+                    <textarea class="form-textarea" id="project-desc" rows="5" placeholder="Например: Сломалась ручка дверцы шкафа. Нужна точная замена. Размеры: 120×40×25 мм."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Желаемый материал</label>
+                        <select class="form-select" id="project-material">
+                            <option value="">Не знаю — подскажете</option>
+                            <option value="pla">PLA (пластик)</option>
+                            <option value="petg">PETG (прочный пластик)</option>
+                            <option value="abs">ABS (термостойкий)</option>
+                            <option value="resin">Смола (точная печать)</option>
+                            <option value="nylon">Нейлон</option>
+                            <option value="metal">Металл</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Срочность</label>
+                        <select class="form-select" id="project-urgency">
+                            <option value="standard">Стандарт (5-7 дней)</option>
+                            <option value="fast">Быстро (2-3 дня)</option>
+                            <option value="express">Экспресс (1 день)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wizard-step" data-step="3">
+                <h2 class="wizard-step__title">Контактные данные</h2>
+                <p class="wizard-step__desc">Мы свяжемся с вами для уточнения деталей и расчёта стоимости.</p>
+
+                <div class="form-group">
+                    <label class="form-label">Ваше имя *</label>
+                    <input class="form-input" type="text" id="contact-name" placeholder="Иван">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Телефон *</label>
+                        <input class="form-input" type="tel" id="contact-phone" placeholder="+7 (___) ___-__-__">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Telegram</label>
+                        <input class="form-input" type="text" id="contact-telegram" placeholder="@username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input class="form-input" type="email" id="contact-email" placeholder="mail@example.com">
+                </div>
+            </div>
+
+            <div class="wizard-step" data-step="4">
+                <div class="wizard-step__success">
+                    <div class="wizard-step__success-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <h2 class="wizard-step__title">Заявка отправлена!</h2>
+                    <p class="wizard-step__desc">Мы изучим вашу задачу и свяжемся в ближайшее время для обсуждения деталей и расчёта стоимости.</p>
+                    <p class="wizard-step__hint">После регистрации вы сможете отслеживать статус проекта в личном кабинете.</p>
+                </div>
+            </div>
+
+        </form>
+
+        <div class="project-wizard__nav" id="wizard-nav">
+            <button class="wizard-btn wizard-btn--back" id="btn-back" style="visibility: hidden;">Назад</button>
+            <button class="wizard-btn wizard-btn--next" id="btn-next">Далее</button>
+        </div>
+    </div>
+
+    <div class="project-wizard__pricing">
+        <h2 class="project-wizard__pricing-title">Стоимость</h2>
+        <p class="project-wizard__pricing-desc">Точная стоимость определяется после анализа вашей задачи</p>
+        
+        <div class="pricing-cards">
+            <div class="pricing-card pricing-card--exact">
+                <div class="pricing-card__badge">Точная цена</div>
+                <div class="pricing-card__icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                </div>
+                <h3 class="pricing-card__title">3D-моделирование</h3>
+                <p class="pricing-card__price">от 500 ₽</p>
+                <p class="pricing-card__note">Фиксированная стоимость. Точная цена известна сразу после анализа фото.</p>
+                <ul class="pricing-card__includes">
+                    <li>Восстановление по фото</li>
+                    <li>Исправление геометрии</li>
+                    <li>Готовый файл для печати</li>
+                </ul>
+            </div>
+
+            <div class="pricing-card pricing-card--approx">
+                <div class="pricing-card__badge pricing-card__badge--warn">Уточнится после моделирования</div>
+                <div class="pricing-card__icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                        <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                </div>
+                <h3 class="pricing-card__title">3D-печать</h3>
+                <p class="pricing-card__price">от 750 ₽</p>
+                <p class="pricing-card__note">Ориентировочная цена. Точная стоимость зависит от объёма и сложности готовой 3D-модели.</p>
+                <ul class="pricing-card__includes">
+                    <li>Профессиональное оборудование</li>
+                    <li>Широкий выбор материалов</li>
+                    <li>Контроль качества</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="pricing-total">
+            <div class="pricing-total__label">Примерная стоимость полного цикла</div>
+            <div class="pricing-total__price">от 1 250 ₽</div>
+            <div class="pricing-total__note">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                Стоимость печати может измениться после создания 3D-модели. Мы всегда согласовываем финальную цену перед началом печати.
+            </div>
+        </div>
+    </div>
+
+    <div class="project-wizard__process">
+        <h2 class="project-wizard__process-title">Как это работает</h2>
+        <div class="process-timeline">
+            <div class="process-step">
+                <div class="process-step__dot"></div>
+                <h3>Заявка</h3>
+                <p>Вы описываете задачу и загружаете фото</p>
+            </div>
+            <div class="process-step">
+                <div class="process-step__dot"></div>
+                <h3>Оценка</h3>
+                <p>Мы анализируем задачу и называем стоимость</p>
+            </div>
+            <div class="process-step">
+                <div class="process-step__dot"></div>
+                <h3>Работа</h3>
+                <p>Сканируем, моделируем, печатаем</p>
+            </div>
+            <div class="process-step">
+                <div class="process-step__dot"></div>
+                <h3>Результат</h3>
+                <p>Проверяете и получаете готовую деталь</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="project-wizard__faq">
+        <h2 class="project-wizard__faq-title">Частые вопросы</h2>
+        
+        <div class="faq-item" data-faq>
+            <button class="faq-item__question">
+                Почему цена печати «от»?
+                <span class="faq-item__toggle">+</span>
+            </button>
+            <div class="faq-item__answer">
+                Стоимость 3D-печати зависит от объёма модели и расхода материала. Точная цена становится известна только после создания 3D-модели. Мы всегда согласовываем финальную цену перед началом печати.
+            </div>
+        </div>
+
+        <div class="faq-item" data-faq>
+            <button class="faq-item__question">
+                Что делать, если нет чертежей?
+                <span class="faq-item__toggle">+</span>
+            </button>
+            <div class="faq-item__answer">
+                Не проблема — мы можем восстановить модель по фото или отсканировать сломанную деталь. Точность восстановления до 0.1 мм.
+            </div>
+        </div>
+
+        <div class="faq-item" data-faq>
+            <button class="faq-item__question">
+                Какие сроки?
+                <span class="faq-item__toggle">+</span>
+            </button>
+            <div class="faq-item__answer">
+                Стандарт — 5-7 рабочих дней. Ускоренная работа — 2-3 дня. Экспресс — 1 день (доплата 50%).
+            </div>
+        </div>
+
+        <div class="faq-item" data-faq>
+            <button class="faq-item__question">
+                Можно ли отслеживать статус?
+                <span class="faq-item__toggle">+</span>
+            </button>
+            <div class="faq-item__answer">
+                Да, после регистрации у вас будет личный кабинет с чатом и статусом проекта в реальном времени.
+            </div>
+        </div>
+    </div>
+</section>

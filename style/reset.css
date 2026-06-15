@@ -1,0 +1,134 @@
+/* Reset and base styles  */
+* {
+	padding: 0px;
+	margin: 0px;
+	border: none;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+:root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #666;
+    --text-muted: #999;
+    --border: #f0f0f0;
+    --border-light: #f8f8f8;
+    --input-bg: #fafafa;
+    --input-border: #eee;
+    --shadow: rgba(0,0,0,0.06);
+    --shadow-lg: rgba(0,0,0,0.1);
+    --primary: #f98130;
+    --primary-hover: #e5722a;
+    --card-bg: #ffffff;
+    --danger: #e53935;
+    --success: #4caf50;
+    --info: #1565c0;
+    --warning: #e65100;
+}
+
+[data-theme="dark"] {
+    --bg: #121212;
+    --surface: #1e1e1e;
+    --text: #e0e0e0;
+    --text-secondary: #aaa;
+    --text-muted: #777;
+    --border: #333;
+    --border-light: #2a2a2a;
+    --input-bg: #2a2a2a;
+    --input-border: #444;
+    --shadow: rgba(0,0,0,0.3);
+    --shadow-lg: rgba(0,0,0,0.5);
+    --card-bg: #1e1e1e;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Links */
+
+a, a:link, a:visited  {
+    text-decoration: none;
+}
+
+a:hover  {
+    text-decoration: none;
+}
+
+/* Common */
+
+aside, nav, footer, header, section, main {
+	display: block;
+}
+
+h1, h2, h3, h4, h5, h6, p {
+    font-size: inherit;
+	font-weight: inherit;
+}
+
+ul, ul li {
+	list-style: none;
+}
+
+img {
+	vertical-align: top;
+}
+
+img, svg {
+	max-width: 100%;
+	height: auto;
+}
+
+address {
+  font-style: normal;
+}
+
+/* Form */
+
+input, textarea, button, select {
+	font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    background-color: transparent;
+}
+
+input::-ms-clear {
+	display: none;
+}
+
+textarea {
+	resize: vertical;
+}
+
+button, input[type="submit"] {
+    display: inline-block;
+    box-shadow: none;
+    background-color: transparent;
+    background: none;
+    cursor: pointer;
+}
+
+button::-moz-focus-inner {
+	padding: 0;
+	border: 0;
+}
+
+label {
+	cursor: pointer;
+}
+
+legend {
+	display: block;
+}
+
+input[type='file'] {
+	max-width: 100%;
+}

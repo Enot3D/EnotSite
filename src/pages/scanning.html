@@ -1,0 +1,98 @@
+<section class="sp">
+    <div class="sp__hero">
+        <h1 class="sp__title">3D-сканирование</h1>
+        <p class="sp__subtitle">Оцифруем реальный объект — получите точную 3D-модель</p>
+    </div>
+
+    <div class="sp__content">
+
+        <div class="sp__main">
+
+            <div>
+                <h2 class="sp-section__title">Что мы делаем</h2>
+                <div class="sp-features">
+                    <div class="sp-feature">
+                        <div class="sp-feature__icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </div>
+                        <div><h3>Сканирование объектов</h3><p>Любые размеры — от мелких деталей до крупных механизмов</p></div>
+                    </div>
+                    <div class="sp-feature">
+                        <div class="sp-feature__icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        </div>
+                        <div><h3>Высокая точность</h3><p>Точность до 0.05 мм — сохраняем все детали поверхности</p></div>
+                    </div>
+                    <div class="sp-feature">
+                        <div class="sp-feature__icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                        </div>
+                        <div><h3>Готовые файлы</h3><p>STL, OBJ, STEP — сразу для печати или работы в 3D-редакторе</p></div>
+                    </div>
+                    <div class="sp-feature">
+                        <div class="sp-feature__icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                        </div>
+                        <div><h3>Печать по скану</h3><p>Можем сразу напечатать копию отсканированного объекта</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h2 class="sp-section__title">Оформите заявку</h2>
+                <div class="sp-form-wrap">
+                    <form class="sp-form" id="scanning-form">
+                        <div class="fg">
+                            <label class="fl">Что нужно отсканировать? *</label>
+                            <textarea class="ft" id="scanning-desc" rows="4" placeholder="Опишите объект: размеры, материал, для чего нужен скан"></textarea>
+                        </div>
+                        <div class="fg">
+                            <label class="fl">Фото объекта</label>
+                            <div class="sp-upload" id="scanning-upload-zone">
+                                <p class="sp-upload__text">Перетащите фото сюда</p>
+                                <label class="sp-upload__btn">
+                                    Выберите
+                                    <input type="file" id="scanning-file-input" multiple accept="image/*" hidden>
+                                </label>
+                            </div>
+                            <div class="sp-preview" id="scanning-preview"></div>
+                        </div>
+                        <div class="fr">
+                            <div class="fg">
+                                <label class="fl">Ваше имя *</label>
+                                <input class="fi" type="text" id="scanning-name" placeholder="Иван">
+                            </div>
+                            <div class="fg">
+                                <label class="fl">Телефон *</label>
+                                <input class="fi" type="tel" id="scanning-phone" placeholder="+7 (___) ___-__-__">
+                            </div>
+                        </div>
+                        <div class="fg">
+                            <label class="fl">Telegram</label>
+                            <input class="fi" type="text" id="scanning-telegram" placeholder="@username">
+                        </div>
+                        <button type="button" class="sp-submit" id="scanning-submit">Отправить заявку</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="sp__sidebar">
+            <div class="sp-sidebar">
+                <h3 class="sp-sidebar__title">Стоимость</h3>
+                <div class="sp-sidebar__list">
+                    <div class="sp-sidebar__row"><span class="sp-sidebar__row-label">Сканирование</span><span class="sp-sidebar__row-value">от 1 500 ₽</span></div>
+                    <div class="sp-sidebar__row"><span class="sp-sidebar__row-label">Обработка скана</span><span class="sp-sidebar__row-value">от 500 ₽</span></div>
+                    <div class="sp-sidebar__row"><span class="sp-sidebar__row-label">Точность</span><span class="sp-sidebar__row-value">до 0.05 мм</span></div>
+                    <div class="sp-sidebar__row"><span class="sp-sidebar__row-label">Сроки</span><span class="sp-sidebar__row-value">1-3 дня</span></div>
+                </div>
+            </div>
+            <div class="sp-sidebar sp-sidebar--note">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <div><strong>Привезите объект к нам</strong><p>Или мы можем выехать на место для крупных объектов</p></div>
+            </div>
+        </div>
+
+    </div>
+</section>

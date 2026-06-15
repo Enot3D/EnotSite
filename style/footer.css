@@ -1,0 +1,25 @@
+.site-footer {
+    background-color: #1a1a1a;
+    color: #fff;
+    padding: 40px 40px;
+    margin-top: 60px;
+}
+
+.site-footer__container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.site-footer__copy {
+    text-align: center;
+    font-size: 14px;
+    color: #888;
+}
+
+[data-theme="dark"] .site-footer {
+    background-color: #0a0a0a;
+}
+
+[data-theme="dark"] .site-footer__copy {
+    color: #666;
+}

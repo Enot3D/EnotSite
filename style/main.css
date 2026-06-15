@@ -1,0 +1,16 @@
+main {
+    min-height: calc(100vh - 200px);
+}
+
+* {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+}
+
+a {
+    color: var(--primary);
+}

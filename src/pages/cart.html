@@ -1,0 +1,35 @@
+<section class="cart-page">
+    <div class="cart-page__hero">
+        <h1 class="cart-page__title">Корзина</h1>
+    </div>
+
+    <div class="cart-page__layout" id="cart-layout">
+        <div class="cart-page__items" id="cart-items">
+            <!-- Заполняется из JS -->
+        </div>
+
+        <div class="cart-page__summary" id="cart-summary">
+            <div class="cart-summary">
+                <h3 class="cart-summary__title">Итого</h3>
+                <div class="cart-summary__rows" id="summary-rows"></div>
+                <div class="cart-summary__total">
+                    <span>К оплате</span>
+                    <span id="summary-total">0 ₽</span>
+                </div>
+                <button class="cart-summary__btn" id="cart-checkout">Оформить заказ</button>
+                <p class="cart-summary__hint">Бесплатная доставка от 5 000 ₽</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="cart-empty" id="cart-empty" style="display: none;">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <h2>Корзина пуста</h2>
+        <p>Добавьте товары из каталога, чтобы оформить заказ</p>
+        <button class="cart-empty__btn" id="cart-go-catalog">Перейти в каталог</button>
+    </div>
+</section>

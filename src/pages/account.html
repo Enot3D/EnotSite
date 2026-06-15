@@ -1,0 +1,51 @@
+<section class="account">
+    <div class="account__header">
+        <div class="account__user">
+            <div class="account__avatar" id="account-avatar">И</div>
+            <div class="account__user-info">
+                <h1 class="account__name" id="account-name">Пользователь</h1>
+                <p class="account__contact" id="account-contact"></p>
+            </div>
+        </div>
+        <button class="account__logout" id="account-logout">Выйти</button>
+    </div>
+
+    <div class="account__tabs">
+        <button class="account__tab active" data-tab="orders">Мои заказы</button>
+        <button class="account__tab" data-tab="settings">Настройки</button>
+    </div>
+
+    <div class="account__tab-content active" id="tab-orders">
+        <div class="account__orders" id="account-orders"></div>
+        <div class="order-detail" id="order-detail" style="display:none;"></div>
+    </div>
+
+    <div class="account__tab-content" id="tab-settings">
+        <div class="account-settings">
+            <h3 class="account-settings__title">Личные данные</h3>
+            <form class="account-settings__form" id="settings-form">
+                <div class="account-settings__row">
+                    <div class="account-settings__field">
+                        <label class="account-settings__label">Имя</label>
+                        <input class="account-settings__input" type="text" id="settings-name">
+                    </div>
+                    <div class="account-settings__field">
+                        <label class="account-settings__label">Телефон</label>
+                        <input class="account-settings__input" type="tel" id="settings-phone">
+                    </div>
+                </div>
+                <div class="account-settings__row">
+                    <div class="account-settings__field">
+                        <label class="account-settings__label">Email</label>
+                        <input class="account-settings__input" type="email" id="settings-email">
+                    </div>
+                    <div class="account-settings__field">
+                        <label class="account-settings__label">Telegram</label>
+                        <input class="account-settings__input" type="text" id="settings-telegram">
+                    </div>
+                </div>
+                <button type="button" class="account-settings__btn" id="settings-save">Сохранить</button>
+            </form>
+        </div>
+    </div>
+</section>
