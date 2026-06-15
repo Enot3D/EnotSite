@@ -11,14 +11,7 @@ function saveProducts(products) {
 function loadCategories() {
     var saved = localStorage.getItem('enotspace_categories');
     if (saved) return JSON.parse(saved);
-    return [
-        { id: 'vases', name: 'Вазы' },
-        { id: 'frames', name: 'Рамки' },
-        { id: 'lighting', name: 'Освещение' },
-        { id: 'textiles', name: 'Текстиль' },
-        { id: 'planters', name: 'Кашпо' },
-        { id: 'candles', name: 'Свечи' }
-    ];
+    return [];
 }
 
 function saveCategories(cats) {

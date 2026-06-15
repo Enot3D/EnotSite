@@ -215,7 +215,23 @@
         }
 
         function seedAccounts() {
-            // No test data - clean start
+            var cleanupKey = 'enotspace_v2_cleaned';
+            if (!localStorage.getItem(cleanupKey)) {
+                localStorage.removeItem('enotspace_users');
+                localStorage.removeItem('enotspace_projects');
+                localStorage.removeItem('enotspace_cart');
+                localStorage.removeItem('enotspace_favorites');
+                localStorage.removeItem('enotspace_reviews');
+                localStorage.removeItem('enotspace_purchased');
+                localStorage.removeItem('enotspace_promos');
+                localStorage.removeItem('enotspace_promo_applied');
+                localStorage.removeItem('enotspace_about');
+                localStorage.removeItem('enotspace_products');
+                localStorage.removeItem('enotspace_categories');
+                localStorage.removeItem('enotspace_current_user');
+                localStorage.removeItem('enotspace_service_prices');
+                localStorage.setItem(cleanupKey, '1');
+            }
         }
 
         seedAccounts();
