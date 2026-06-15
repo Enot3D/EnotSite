@@ -19,7 +19,8 @@ function setupAdminTabs() {
         '<button class="account__tab" data-tab="users">Пользователи</button>' +
         '<button class="account__tab" data-tab="settings">Настройки</button>';
 
-    document.getElementById('tab-dashboard').style.display = '';
+    document.querySelectorAll('.account__tab-content').forEach(function(c) { c.classList.remove('active'); });
+    document.getElementById('tab-dashboard').classList.add('active');
     document.getElementById('tab-admin-chat').style.display = '';
     document.getElementById('tab-all-orders').style.display = '';
     document.getElementById('tab-admin-promos').style.display = '';

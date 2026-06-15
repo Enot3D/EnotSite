@@ -213,9 +213,15 @@ function initAccount() {
         tab.addEventListener('click', function() {
             tabs.forEach(function(t) { t.classList.remove('active'); });
             tab.classList.add('active');
-            document.querySelectorAll('.account__tab-content').forEach(function(c) { c.classList.remove('active'); });
+            document.querySelectorAll('.account__tab-content').forEach(function(c) {
+                c.classList.remove('active');
+                c.style.display = 'none';
+            });
             var target = document.getElementById('tab-' + tab.dataset.tab);
-            if (target) target.classList.add('active');
+            if (target) {
+                target.classList.add('active');
+                target.style.display = '';
+            }
         });
     });
 
