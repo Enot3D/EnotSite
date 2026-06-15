@@ -17,17 +17,20 @@ function setupAdminTabs() {
         '<button class="account__tab active" data-tab="dashboard">Дашборд</button>' +
         '<button class="account__tab" data-tab="admin-chat">Чат</button>' +
         '<button class="account__tab" data-tab="all-orders">Заказы</button>' +
+        '<button class="account__tab" data-tab="admin-promos">Промокоды</button>' +
         '<button class="account__tab" data-tab="users">Пользователи</button>' +
         '<button class="account__tab" data-tab="settings">Настройки</button>';
 
     document.getElementById('tab-dashboard').style.display = '';
     document.getElementById('tab-admin-chat').style.display = '';
     document.getElementById('tab-all-orders').style.display = '';
+    document.getElementById('tab-admin-promos').style.display = '';
     document.getElementById('tab-users').style.display = '';
 
     renderDashboard();
     renderAdminChat();
     renderAllOrders();
+    renderAdminPromos();
     renderUsers();
 }
 

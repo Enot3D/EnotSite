@@ -370,7 +370,176 @@
 /* Notifications */
 [data-theme="dark"] .admin-notif__btn { color: var(--text); }
 
-/* Reviews Page */
+/* Admin Promos */
+.admin-promos__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.admin-promos__title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.admin-promos__empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    font-size: 16px;
+    background: var(--card-bg);
+    border-radius: 14px;
+    box-shadow: 0 2px 12px var(--shadow);
+}
+
+.admin-promos__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admin-promo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 10px var(--shadow);
+    border-left: 4px solid transparent;
+}
+
+.admin-promo--active {
+    border-left-color: var(--success);
+}
+
+.admin-promo--inactive {
+    border-left-color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.admin-promo__main {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.admin-promo__code {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: monospace;
+    color: var(--primary);
+    letter-spacing: 1px;
+}
+
+.admin-promo__info {
+    flex: 1;
+}
+
+.admin-promo__discount {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.admin-promo__meta {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.admin-promo__status {
+    font-weight: 600;
+}
+
+.admin-promo--active .admin-promo__status {
+    color: var(--success);
+}
+
+.admin-promo--inactive .admin-promo__status {
+    color: var(--text-muted);
+}
+
+.admin-promo__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-promo__toggle,
+.admin-promo__edit,
+.admin-promo__delete {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.admin-promo__toggle {
+    width: auto;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--border);
+    color: var(--text-secondary);
+}
+
+.admin-promo__toggle:hover {
+    background: var(--input-border);
+}
+
+.admin-promo__edit {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.admin-promo__edit:hover {
+    background: #bbdefb;
+}
+
+.admin-promo__delete {
+    background: #fce4ec;
+    color: #c62828;
+}
+
+.admin-promo__delete:hover {
+    background: #f8bbd0;
+}
+
+[data-theme="dark"] .admin-promos__title { color: var(--text); }
+[data-theme="dark"] .admin-promo { background: var(--card-bg); }
+[data-theme="dark"] .admin-promo__code { color: var(--primary); }
+[data-theme="dark"] .admin-promo__discount { color: var(--text); }
+[data-theme="dark"] .admin-promo__meta { color: var(--text-muted); }
+[data-theme="dark"] .admin-promo__toggle { background: var(--border); color: var(--text-secondary); }
+[data-theme="dark"] .admin-promo__edit { background: var(--input-border); color: var(--info); }
+[data-theme="dark"] .admin-promo__delete { background: var(--input-border); color: var(--danger); }
+
+@media (max-width: 768px) {
+    .admin-promo {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .admin-promo__main {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .admin-promo__meta {
+        flex-wrap: wrap;
+    }
+}
 [data-theme="dark"] .reviews-page__title { color: var(--text); }
 [data-theme="dark"] .reviews-page__subtitle { color: var(--text-secondary); }
 [data-theme="dark"] .reviews-page__stats { background: var(--card-bg); }

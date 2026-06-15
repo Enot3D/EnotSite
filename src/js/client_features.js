@@ -49,10 +49,17 @@ function getPromoCodes() {
     return [];
 }
 
+function savePromoCodes(promos) {
+    localStorage.setItem('enotspace_promos', JSON.stringify(promos));
+}
+
 function applyPromo(code, subtotal) {
     var promos = getPromoCodes();
     var promo = promos.find(function(p) { return p.code.toUpperCase() === code.toUpperCase(); });
     if (!promo) return { valid: false, error: 'Промокод не найден' };
+    if (promo.active === false) return { valid: false, error: 'Промокод деактивирован' };
+    if (promo.maxUses && promo.used >= promo.maxUses) return { valid: false, error: 'Промокод исчерпан' };
+    if (promo.expiresAt && new Date(promo.expiresAt) < new Date()) return { valid: false, error: 'Срок действия промокода истёк' };
 
     var discount = 0;
     if (promo.type === 'percent') {
@@ -61,7 +68,180 @@ function applyPromo(code, subtotal) {
         discount = Math.min(promo.discount, subtotal);
     }
 
-    return { valid: true, discount: discount, description: promo.description };
+    promo.used = (promo.used || 0) + 1;
+    savePromoCodes(promos);
+
+    return { valid: true, discount: discount, description: promo.description || promo.code };
+}
+
+function renderAdminPromos() {
+    var promos = getPromoCodes();
+    var container = document.getElementById('tab-admin-promos');
+    if (!container) return;
+
+    var html = '<div class="admin-promos">';
+    html += '<div class="admin-promos__header">';
+    html += '<h2 class="admin-promos__title">Промокоды</h2>';
+    html += '<button class="admin-form__btn admin-form__btn--save" id="add-promo-btn">+ Создать промокод</button>';
+    html += '</div>';
+
+    if (promos.length === 0) {
+        html += '<div class="admin-promos__empty">Промокодов пока нет. Создайте первый!</div>';
+    } else {
+        html += '<div class="admin-promos__list">';
+        promos.forEach(function(p, i) {
+            var isActive = p.active !== false;
+            var isExpired = p.expiresAt && new Date(p.expiresAt) < new Date();
+            var isExhausted = p.maxUses && p.used >= p.maxUses;
+            var statusClass = (!isActive || isExpired || isExhausted) ? 'admin-promo--inactive' : 'admin-promo--active';
+            var statusText = !isActive ? 'Деактивирован' : (isExpired ? 'Истёк' : (isExhausted ? 'Исчерпан' : 'Активен'));
+
+            html += '<div class="admin-promo ' + statusClass + '">';
+            html += '<div class="admin-promo__main">';
+            html += '<div class="admin-promo__code">' + escapeHtml(p.code) + '</div>';
+            html += '<div class="admin-promo__info">';
+            html += '<div class="admin-promo__discount">' + (p.type === 'percent' ? p.discount + '%' : p.discount + ' ₽') + ' ' + escapeHtml(p.description || '') + '</div>';
+            html += '<div class="admin-promo__meta">';
+            html += '<span class="admin-promo__status">' + statusText + '</span>';
+            html += '<span class="admin-promo__uses">Использован: ' + (p.used || 0) + (p.maxUses ? ' / ' + p.maxUses : ' / ∞') + '</span>';
+            if (p.expiresAt) html += '<span class="admin-promo__expires">До: ' + escapeHtml(new Date(p.expiresAt).toLocaleDateString('ru-RU')) + '</span>';
+            html += '</div></div></div>';
+            html += '<div class="admin-promo__actions">';
+            html += '<button class="admin-promo__toggle" data-index="' + i + '">' + (isActive ? 'Выкл' : 'Вкл') + '</button>';
+            html += '<button class="admin-promo__edit" data-index="' + i + '">✎</button>';
+            html += '<button class="admin-promo__delete" data-index="' + i + '">✕</button>';
+            html += '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+
+    document.getElementById('add-promo-btn').addEventListener('click', function() {
+        openPromoEditor(null);
+    });
+
+    container.querySelectorAll('.admin-promo__toggle').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var idx = parseInt(btn.dataset.index);
+            var promos = getPromoCodes();
+            promos[idx].active = promos[idx].active === false ? true : false;
+            savePromoCodes(promos);
+            renderAdminPromos();
+        });
+    });
+
+    container.querySelectorAll('.admin-promo__edit').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var idx = parseInt(btn.dataset.index);
+            var promos = getPromoCodes();
+            openPromoEditor(promos[idx], idx);
+        });
+    });
+
+    container.querySelectorAll('.admin-promo__delete').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var idx = parseInt(btn.dataset.index);
+            if (!confirm('Удалить промокод?')) return;
+            var promos = getPromoCodes();
+            promos.splice(idx, 1);
+            savePromoCodes(promos);
+            renderAdminPromos();
+        });
+    });
+}
+
+function openPromoEditor(promo, editIndex) {
+    var isNew = !promo;
+
+    var html = '<div class="admin-modal" id="promo-editor-modal">';
+    html += '<div class="admin-modal__overlay" id="promo-overlay"></div>';
+    html += '<div class="admin-modal__content">';
+    html += '<button class="admin-modal__close" id="promo-close">&times;</button>';
+    html += '<h2 class="admin-modal__title">' + (isNew ? 'Новый промокод' : 'Редактирование промокода') + '</h2>';
+    html += '<form class="admin-form" id="promo-editor-form">';
+
+    html += '<div class="admin-form__group"><label class="admin-form__label">Код промокода *</label>';
+    html += '<input class="admin-form__input" type="text" id="promo-code" value="' + (promo ? escapeAttr(promo.code) : '') + '" placeholder="Например: SUMMER2025" required style="text-transform:uppercase"></div>';
+
+    html += '<div class="admin-form__row">';
+    html += '<div class="admin-form__group"><label class="admin-form__label">Тип скидки</label>';
+    html += '<select class="admin-form__select" id="promo-type">';
+    html += '<option value="percent"' + (promo && promo.type === 'percent' ? ' selected' : '') + '>Процент (%)</option>';
+    html += '<option value="fixed"' + (promo && promo.type === 'fixed' ? ' selected' : '') + '>Фиксированная (₽)</option>';
+    html += '</select></div>';
+    html += '<div class="admin-form__group"><label class="admin-form__label">Размер скидки *</label>';
+    html += '<input class="admin-form__input" type="number" id="promo-discount" value="' + (promo ? promo.discount : '') + '" min="1" required></div>';
+    html += '</div>';
+
+    html += '<div class="admin-form__group"><label class="admin-form__label">Описание</label>';
+    html += '<input class="admin-form__input" type="text" id="promo-description" value="' + (promo ? escapeAttr(promo.description || '') : '') + '" placeholder="Скидка 10% на всё"></div>';
+
+    html += '<div class="admin-form__row">';
+    html += '<div class="admin-form__group"><label class="admin-form__label">Макс. использований (0 = ∞)</label>';
+    html += '<input class="admin-form__input" type="number" id="promo-max-uses" value="' + (promo && promo.maxUses ? promo.maxUses : '0') + '" min="0"></div>';
+    html += '<div class="admin-form__group"><label class="admin-form__label">Срок действия</label>';
+    html += '<input class="admin-form__input" type="date" id="promo-expires" value="' + (promo && promo.expiresAt ? promo.expiresAt.split('T')[0] : '') + '"></div>';
+    html += '</div>';
+
+    html += '<div class="admin-form__actions">';
+    html += '<button type="button" class="admin-form__btn admin-form__btn--cancel" id="promo-cancel">Отмена</button>';
+    html += '<button type="submit" class="admin-form__btn admin-form__btn--save">Сохранить</button>';
+    html += '</div></form></div></div>';
+
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.body.style.overflow = 'hidden';
+
+    var modal = document.getElementById('promo-editor-modal');
+    document.getElementById('promo-overlay').addEventListener('click', closePromoEditor);
+    document.getElementById('promo-close').addEventListener('click', closePromoEditor);
+    document.getElementById('promo-cancel').addEventListener('click', closePromoEditor);
+
+    document.getElementById('promo-editor-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var code = sanitizeInput(document.getElementById('promo-code').value, 30).toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+        var discount = parseInt(document.getElementById('promo-discount').value);
+        var type = document.getElementById('promo-type').value;
+        var description = sanitizeInput(document.getElementById('promo-description').value, 200);
+        var maxUses = parseInt(document.getElementById('promo-max-uses').value) || 0;
+        var expiresAt = document.getElementById('promo-expires').value || null;
+
+        if (!code || !discount) { alert('Заполните код и размер скидки'); return; }
+        if (maxUses < 0) { alert('Макс. использований не может быть отрицательным'); return; }
+
+        var promos = getPromoCodes();
+        var promoData = {
+            code: code,
+            type: type,
+            discount: discount,
+            description: description,
+            maxUses: maxUses || null,
+            expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
+            used: promo ? (promo.used || 0) : 0,
+            active: promo ? promo.active !== false : true
+        };
+
+        if (isNew) {
+            if (promos.some(function(p) { return p.code === code; })) {
+                alert('Промокод с таким кодом уже существует');
+                return;
+            }
+            promos.push(promoData);
+        } else {
+            promos[editIndex] = promoData;
+        }
+
+        savePromoCodes(promos);
+        closePromoEditor();
+        renderAdminPromos();
+    });
+
+    function closePromoEditor() {
+        modal.remove();
+        document.body.style.overflow = '';
+    }
 }
 
 function setupPromoCode() {

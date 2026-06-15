@@ -391,5 +391,6 @@ PAGES.account = `<section class="account">
     <div class="account__tab-content" id="tab-dashboard" style="display:none;"></div>
     <div class="account__tab-content" id="tab-admin-chat" style="display:none;"></div>
     <div class="account__tab-content" id="tab-all-orders" style="display:none;"></div>
+    <div class="account__tab-content" id="tab-admin-promos" style="display:none;"></div>
     <div class="account__tab-content" id="tab-users" style="display:none;"></div>
 </section>`;
