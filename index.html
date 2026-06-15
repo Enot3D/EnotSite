@@ -161,7 +161,10 @@
             }
             if (page === 'about') {
                 document.getElementById('about-placeholder').innerHTML = renderAboutPage();
-                setTimeout(initAboutPage, 100);
+                setTimeout(function() {
+                    loadAndRenderAbout();
+                    initAboutPage();
+                }, 100);
             }
         }
 

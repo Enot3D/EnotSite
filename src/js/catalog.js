@@ -3,7 +3,7 @@ let catalogPollingId = null;
 
 class Catalog {
     constructor() {
-        this.products = typeof loadProducts === 'function' ? loadProducts() : PRODUCTS;
+        this.products = PRODUCTS.slice();
         this.cart = {};
         this.currentFilter = 'all';
         this.currentColorIndex = {};
@@ -30,9 +30,17 @@ class Catalog {
     }
     
     reinit() {
-        this.products = typeof loadProducts === 'function' ? loadProducts() : PRODUCTS;
-        this.currentFilter = 'all';
-        this.waitForGrid();
+        var self = this;
+        if (typeof loadProducts === 'function') {
+            loadProducts().then(function(products) {
+                self.products = products;
+                self.currentFilter = 'all';
+                self.waitForGrid();
+            });
+        } else {
+            self.currentFilter = 'all';
+            self.waitForGrid();
+        }
     }
     
     renderProducts() {

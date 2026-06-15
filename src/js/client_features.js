@@ -552,41 +552,33 @@ function setupFavoritesNav() {
 
 // === ABOUT PAGE ===
 function loadAboutData() {
-    var saved = localStorage.getItem('enotspace_about');
-    if (saved) return JSON.parse(saved);
-    return {
-        blocks: [
-            { icon: 'layers', title: 'О компании', text: 'Заполните информацию о вашей компании.' },
-            { icon: 'users', title: 'Команда', text: 'Расскажите о вашей команде.' },
-            { icon: 'clock', title: 'Сроки', text: 'Укажите ваши сроки работы.' },
-            { icon: 'shield', title: 'Гарантии', text: 'Опишите ваши гарантии качества.' }
-        ],
-        stats: [
-            { number: '0', label: 'Заказов' },
-            { number: '0', label: 'Клиентов' },
-            { number: '0', label: 'Лет опыта' },
-            { number: '0', label: 'На связи' }
-        ],
-        equipment: [
-            { title: 'Оборудование 1', text: 'Описание оборудования.' },
-            { title: 'Оборудование 2', text: 'Описание оборудования.' },
-            { title: 'Оборудование 3', text: 'Описание оборудования.' }
-        ],
-        contact: {
-            phone: '',
-            email: '',
-            address: ''
-        }
-    };
+    return db.collection('settings').doc('about').get().then(function(doc) {
+        if (doc.exists) return doc.data();
+        return {
+            blocks: [
+                { icon: 'layers', title: 'О компании', text: 'Заполните информацию о вашей компании.' },
+                { icon: 'users', title: 'Команда', text: 'Расскажите о вашей команде.' },
+                { icon: 'clock', title: 'Сроки', text: 'Укажите ваши сроки работы.' },
+                { icon: 'shield', title: 'Гарантии', text: 'Опишите ваши гарантии качества.' }
+            ],
+            stats: [
+                { number: '0', label: 'Заказов' },
+                { number: '0', label: 'Клиентов' },
+                { number: '0', label: 'Лет опыта' },
+                { number: '0', label: 'На связи' }
+            ],
+            equipment: [],
+            contact: { phone: '', email: '', address: '' }
+        };
+    });
 }
 
 function saveAboutData(data) {
-    localStorage.setItem('enotspace_about', JSON.stringify(data));
+    return db.collection('settings').doc('about').set(data);
 }
 
 function renderAboutPage() {
     var user = getCurrentUser();
-    var data = loadAboutData();
     var isAdminUser = isAdmin(user);
 
     var html = '<section class="about-page">';
@@ -595,50 +587,63 @@ function renderAboutPage() {
     html += '<p class="about-page__subtitle">Команда профессионалов в мире 3D-технологий</p>';
     if (isAdminUser) html += '<button class="about-edit-btn" id="about-edit-btn">✎ Редактировать</button>';
     html += '</div>';
-
-    html += '<div class="about-page__content">';
-    data.blocks.forEach(function(block) {
-        html += '<div class="about-page__block">';
-        html += '<div class="about-page__icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="1.5">';
-        if (block.icon === 'layers') html += '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>';
-        else if (block.icon === 'users') html += '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>';
-        else if (block.icon === 'clock') html += '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>';
-        else if (block.icon === 'shield') html += '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>';
-        html += '</svg></div>';
-        html += '<h2 class="about-page__block-title">' + escapeHtml(block.title) + '</h2>';
-        html += '<p class="about-page__text">' + escapeHtml(block.text) + '</p>';
-        html += '</div>';
-    });
-    html += '</div>';
-
-    html += '<div class="about-page__stats-row">';
-    data.stats.forEach(function(s) {
-        html += '<div class="about-page__stat"><div class="about-page__stat-number">' + escapeHtml(s.number) + '</div><div class="about-page__stat-label">' + escapeHtml(s.label) + '</div></div>';
-    });
-    html += '</div>';
-
-    html += '<div class="about-page__equipment">';
-    html += '<h2 class="about-page__section-title">Оборудование</h2>';
-    html += '<div class="about-page__equip-grid">';
-    data.equipment.forEach(function(e) {
-        html += '<div class="about-page__equip-card"><h3>' + escapeHtml(e.title) + '</h3><p>' + escapeHtml(e.text) + '</p></div>';
-    });
-    html += '</div></div>';
-
-    html += '<div class="about-page__contact-block">';
-    html += '<h2 class="about-page__section-title">Контакты</h2>';
-    html += '<div class="about-page__contact-grid">';
-    html += '<div class="about-page__contact-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><div><strong>Телефон</strong><p>' + escapeHtml(data.contact.phone) + '</p></div></div>';
-    html += '<div class="about-page__contact-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><div><strong>Email</strong><p>' + escapeHtml(data.contact.email) + '</p></div></div>';
-    html += '<div class="about-page__contact-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><div><strong>Адрес</strong><p>' + escapeHtml(data.contact.address) + '</p></div></div>';
-    html += '</div></div>';
-
+    html += '<div id="about-content"><p style="text-align:center;color:var(--text-muted);">Загрузка...</p></div>';
     html += '</section>';
     return html;
 }
 
+function loadAndRenderAbout() {
+    loadAboutData().then(function(data) {
+        var container = document.getElementById('about-content');
+        if (!container) return;
+
+        var html = '<div class="about-page__content">';
+        data.blocks.forEach(function(block) {
+            html += '<div class="about-page__block">';
+            html += '<div class="about-page__icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="1.5">';
+            if (block.icon === 'layers') html += '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>';
+            else if (block.icon === 'users') html += '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>';
+            else if (block.icon === 'clock') html += '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>';
+            else if (block.icon === 'shield') html += '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>';
+            html += '</svg></div>';
+            html += '<h2 class="about-page__block-title">' + escapeHtml(block.title) + '</h2>';
+            html += '<p class="about-page__text">' + escapeHtml(block.text) + '</p>';
+            html += '</div>';
+        });
+        html += '</div>';
+
+        html += '<div class="about-page__stats-row">';
+        data.stats.forEach(function(s) {
+            html += '<div class="about-page__stat"><div class="about-page__stat-number">' + escapeHtml(s.number) + '</div><div class="about-page__stat-label">' + escapeHtml(s.label) + '</div></div>';
+        });
+        html += '</div>';
+
+        html += '<div class="about-page__equipment">';
+        html += '<h2 class="about-page__section-title">Оборудование</h2>';
+        html += '<div class="about-page__equip-grid">';
+        if (data.equipment && data.equipment.length) {
+            data.equipment.forEach(function(e) {
+                html += '<div class="about-page__equip-card"><h3>' + escapeHtml(e.title) + '</h3><p>' + escapeHtml(e.text) + '</p></div>';
+            });
+        } else {
+            html += '<p style="color:var(--text-muted);">Информация не заполнена</p>';
+        }
+        html += '</div></div>';
+
+        html += '<div class="about-page__contact-block">';
+        html += '<h2 class="about-page__section-title">Контакты</h2>';
+        html += '<div class="about-page__contact-grid">';
+        html += '<div class="about-page__contact-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><div><strong>Телефон</strong><p>' + escapeHtml(data.contact.phone || 'Не указан') + '</p></div></div>';
+        html += '<div class="about-page__contact-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><div><strong>Email</strong><p>' + escapeHtml(data.contact.email || 'Не указан') + '</p></div></div>';
+        html += '<div class="about-page__contact-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f98130" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><div><strong>Адрес</strong><p>' + escapeHtml(data.contact.address || 'Не указан') + '</p></div></div>';
+        html += '</div></div>';
+
+        container.innerHTML = html;
+    });
+}
+
 function openAboutEditor() {
-    var data = loadAboutData();
+    loadAboutData().then(function(data) {
 
     var html = '<div class="admin-modal" id="about-editor-modal">';
     html += '<div class="admin-modal__overlay" id="about-overlay"></div>';
@@ -718,15 +723,17 @@ function openAboutEditor() {
             data.contact[field] = sanitizeInput(inp.value, 200);
         });
 
-        saveAboutData(data);
-        closeAboutEditor();
-        navigate('about');
+        saveAboutData(data).then(function() {
+            closeAboutEditor();
+            navigate('about');
+        });
     });
 
     function closeAboutEditor() {
         modal.remove();
         document.body.style.overflow = '';
     }
+    }); // end loadAboutData().then
 }
 
 function initAboutPage() {

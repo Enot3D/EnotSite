@@ -1,47 +1,59 @@
 function renderCatalogFilters() {
     var container = document.getElementById('catalog-filters');
     if (!container) return;
-    var categories = loadCategories();
-    var html = '<button class="catalog__filter active" data-filter="all">Все</button>';
-    categories.forEach(function(c) {
-        html += '<button class="catalog__filter" data-filter="' + escapeAttr(c.id) + '">' + escapeHtml(c.name) + '</button>';
+    loadCategories().then(function(categories) {
+        var html = '<button class="catalog__filter active" data-filter="all">Все</button>';
+        categories.forEach(function(c) {
+            html += '<button class="catalog__filter" data-filter="' + escapeAttr(c.id) + '">' + escapeHtml(c.name) + '</button>';
+        });
+        container.innerHTML = html;
     });
-    container.innerHTML = html;
 }
 
 function loadProducts() {
-    var saved = localStorage.getItem('enotspace_products');
-    if (saved) return JSON.parse(saved);
-    return PRODUCTS.slice();
+    return db.collection('products').get().then(function(snapshot) {
+        var products = [];
+        snapshot.forEach(function(doc) {
+            products.push(Object.assign({ id: parseInt(doc.id) }, doc.data()));
+        });
+        return products.length > 0 ? products : PRODUCTS.slice();
+    });
 }
 
 function saveProducts(products) {
-    localStorage.setItem('enotspace_products', JSON.stringify(products));
+    var batch = db.batch();
+    products.forEach(function(p) {
+        batch.set(db.collection('products').doc(String(p.id)), p);
+    });
+    return batch.commit();
+}
+
+function saveProduct(product) {
+    return db.collection('products').doc(String(product.id)).set(product, { merge: true });
+}
+
+function deleteProduct(productId) {
+    return db.collection('products').doc(String(productId)).delete();
 }
 
 function loadCategories() {
-    var saved = localStorage.getItem('enotspace_categories');
-    if (saved) return JSON.parse(saved);
-    return [];
+    return db.collection('settings').doc('categories').get().then(function(doc) {
+        return doc.exists ? doc.data().categories : [];
+    });
 }
 
 function saveCategories(cats) {
-    localStorage.setItem('enotspace_categories', JSON.stringify(cats));
+    return db.collection('settings').doc('categories').set({ categories: cats });
 }
 
 function loadServicePrices() {
-    var saved = localStorage.getItem('enotspace_service_prices');
-    if (saved) return JSON.parse(saved);
-    return {
-        modeling: { modeling: 'от 500 ₽', repair: 'от 300 ₽', deadline: '1-5 дней' },
-        scanning: { scanning: 'от 1 500 ₽', processing: 'от 500 ₽', accuracy: 'до 0.05 мм', deadline: '1-3 дня' },
-        print: { base: 'от 750 ₽', note: 'Рассчитывается индивидуально' },
-        fullcycle: { modeling: 'от 500 ₽', printing: 'от 750 ₽', total: 'от 1 250 ₽' }
-    };
+    return db.collection('settings').doc('servicePrices').get().then(function(doc) {
+        return doc.exists ? doc.data() : {};
+    });
 }
 
 function saveServicePrices(prices) {
-    localStorage.setItem('enotspace_service_prices', JSON.stringify(prices));
+    return db.collection('settings').doc('servicePrices').set(prices);
 }
 
 function renderCatalogAdminControls() {
@@ -91,9 +103,9 @@ function renderCatalogAdminControls() {
             e.stopPropagation();
             var id = parseInt(btn.dataset.id);
             if (!confirm('Удалить товар?')) return;
-            var products = loadProducts().filter(function(p) { return p.id !== id; });
-            saveProducts(products);
-            if (typeof catalog !== 'undefined') catalog.reinit();
+            deleteProduct(id).then(function() {
+                if (typeof catalog !== 'undefined') catalog.reinit();
+            });
         });
     });
 }
@@ -192,7 +204,7 @@ function openProductEditor(product) {
             products.push(productData);
         }
 
-        saveProducts(products);
+        saveProduct(productData);
         closeEditor();
         if (typeof catalog !== 'undefined') catalog.reinit();
     });
@@ -204,7 +216,7 @@ function openProductEditor(product) {
 }
 
 function openCategoryManager() {
-    var categories = loadCategories();
+    loadCategories().then(function(categories) {
 
     function renderCatList() {
         var list = document.getElementById('cat-manager-list');
@@ -279,28 +291,28 @@ function openCategoryManager() {
         modal.remove();
         document.body.style.overflow = '';
     }
+    }); // end loadCategories().then
 }
 
 function renderServicePriceEditor() {
     var user = getCurrentUser();
     if (!user || !isAdmin(user)) return;
 
-    var prices = loadServicePrices();
+    loadServicePrices().then(function(prices) {
+        var sections = document.querySelectorAll('.sp-sidebar__list');
+        sections.forEach(function(list) {
+            list.insertAdjacentHTML('afterend', '<button class="sp-price-edit-btn" data-service-edit>✎ Редактировать цены</button>');
+        });
 
-    var sections = document.querySelectorAll('.sp-sidebar__list');
-    sections.forEach(function(list) {
-        list.insertAdjacentHTML('afterend', '<button class="sp-price-edit-btn" data-service-edit>✎ Редактировать цены</button>');
-    });
-
-    document.querySelectorAll('[data-service-edit]').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            openServicePriceEditor();
+        document.querySelectorAll('[data-service-edit]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                openServicePriceEditor(prices);
+            });
         });
     });
 }
 
-function openServicePriceEditor() {
-    var prices = loadServicePrices();
+function openServicePriceEditor(prices) {
 
     var html = '<div class="admin-modal" id="price-editor-modal">' +
         '<div class="admin-modal__overlay" id="price-overlay"></div>' +
