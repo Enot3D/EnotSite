@@ -92,9 +92,10 @@ function renderCatalogAdminControls() {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
             var id = parseInt(btn.dataset.id);
-            var products = loadProducts();
-            var product = products.find(function(p) { return p.id === id; });
-            if (product) openProductEditor(product);
+            loadProducts().then(function(products) {
+                var product = products.find(function(p) { return p.id === id; });
+                if (product) openProductEditor(product);
+            });
         });
     });
 
@@ -112,7 +113,8 @@ function renderCatalogAdminControls() {
 
 function openProductEditor(product) {
     var isNew = !product;
-    var categories = loadCategories();
+
+    loadCategories().then(function(categories) {
     var images = (product && product.colors && product.colors[0]) ? product.colors[0].images.join('\n') : '';
     var colorNames = (product && product.colors) ? product.colors.map(function(c) { return c.name; }).join(', ') : '';
     var colorHexes = (product && product.colors) ? product.colors.map(function(c) { return c.hex; }).join(', ') : '';
@@ -213,6 +215,7 @@ function openProductEditor(product) {
         modal.remove();
         document.body.style.overflow = '';
     }
+    }); // end loadCategories().then
 }
 
 function openCategoryManager() {

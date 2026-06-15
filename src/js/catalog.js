@@ -36,6 +36,10 @@ class Catalog {
                 self.products = products;
                 self.currentFilter = 'all';
                 self.waitForGrid();
+            }).catch(function() {
+                self.products = PRODUCTS.slice();
+                self.currentFilter = 'all';
+                self.waitForGrid();
             });
         } else {
             self.currentFilter = 'all';
