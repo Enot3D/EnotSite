@@ -60,6 +60,9 @@ function renderCatalogAdminControls() {
     var user = getCurrentUser();
     if (!user || !isAdmin(user)) return;
 
+    var existingBar = document.querySelector('.catalog-admin-bar');
+    if (existingBar) return;
+
     var grid = document.getElementById('products-grid');
     if (!grid) return;
 
@@ -316,6 +319,7 @@ function renderServicePriceEditor() {
 }
 
 function openServicePriceEditor(prices) {
+    if (!prices) prices = {};
 
     var html = '<div class="admin-modal" id="price-editor-modal">' +
         '<div class="admin-modal__overlay" id="price-overlay"></div>' +

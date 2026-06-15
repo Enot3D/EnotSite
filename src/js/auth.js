@@ -58,16 +58,18 @@ function initAuth() {
         if (!email || !pass) { alert('Заполните все поля'); return; }
 
         auth.signInWithEmailAndPassword(email, pass).then(function(cred) {
-            return db.collection('users').doc(cred.user.uid).get();
-        }).then(function(doc) {
-            if (doc.exists) {
-                var userData = doc.data();
-                userData.id = cred.user.uid;
-                userData.email = cred.user.email;
-                localStorage.setItem('enotspace_current_user', JSON.stringify(userData));
-                closeAuth();
-                updateAuthUI();
-            }
+            return db.collection('users').doc(cred.user.uid).get().then(function(doc) {
+                if (doc.exists) {
+                    var userData = doc.data();
+                    userData.id = cred.user.uid;
+                    userData.email = cred.user.email;
+                    localStorage.setItem('enotspace_current_user', JSON.stringify(userData));
+                    closeAuth();
+                    updateAuthUI();
+                } else {
+                    alert('Профиль не найден в базе данных');
+                }
+            });
         }).catch(function(err) {
             alert('Ошибка входа: ' + err.message);
         });

@@ -23,7 +23,12 @@ function initFirestore() {
             equipment: [],
             contact: { phone: '', email: '', address: '' }
         });
-        batch.set(db.collection('settings').doc('servicePrices'), {});
+        batch.set(db.collection('settings').doc('servicePrices'), {
+            modeling: { modeling: 'от 500 ₽', repair: 'от 300 ₽', deadline: '1-5 дней' },
+            scanning: { scanning: 'от 1 500 ₽', processing: 'от 500 ₽', accuracy: 'до 0.05 мм', deadline: '1-3 дня' },
+            print: { base: 'от 750 ₽', note: 'Рассчитывается индивидуально' },
+            fullcycle: { modeling: 'от 500 ₽', printing: 'от 750 ₽', total: 'от 1 250 ₽' }
+        });
 
         return batch.commit().then(function() { return true; });
     });
