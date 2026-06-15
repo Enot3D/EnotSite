@@ -250,6 +250,14 @@
         if (typeof setupFavoritesNav === 'function') setupFavoritesNav();
         if (typeof initTheme === 'function') initTheme();
 
+        if (typeof initFirestore === 'function') {
+            initFirestore().then(function(created) {
+                if (created) console.log('Firestore initialized');
+            }).catch(function(err) {
+                console.log('Firestore init skipped:', err.message);
+            });
+        }
+
         document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 
         document.getElementById('auth-placeholder').innerHTML = PAGES.auth_modal;

@@ -1,3 +1,34 @@
+// === FIRESTORE INIT ===
+function initFirestore() {
+    return db.collection('settings').doc('init').get().then(function(doc) {
+        if (doc.exists) return false;
+
+        var batch = db.batch();
+
+        batch.set(db.collection('settings').doc('init'), { created: true, createdAt: new Date().toISOString() });
+        batch.set(db.collection('settings').doc('categories'), { categories: [] });
+        batch.set(db.collection('settings').doc('about'), {
+            blocks: [
+                { icon: 'layers', title: 'О компании', text: 'Заполните информацию о вашей компании.' },
+                { icon: 'users', title: 'Команда', text: 'Расскажите о вашей команде.' },
+                { icon: 'clock', title: 'Сроки', text: 'Укажите ваши сроки работы.' },
+                { icon: 'shield', title: 'Гарантии', text: 'Опишите ваши гарантии качества.' }
+            ],
+            stats: [
+                { number: '0', label: 'Заказов' },
+                { number: '0', label: 'Клиентов' },
+                { number: '0', label: 'Лет опыта' },
+                { number: '0', label: 'На связи' }
+            ],
+            equipment: [],
+            contact: { phone: '', email: '', address: '' }
+        });
+        batch.set(db.collection('settings').doc('servicePrices'), {});
+
+        return batch.commit().then(function() { return true; });
+    });
+}
+
 // === FIRESTORE HELPERS ===
 
 // Users
