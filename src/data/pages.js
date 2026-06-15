@@ -58,14 +58,8 @@ PAGES.footer = `<footer class="site-footer">
 PAGES.catalog = `<section class="catalog">
     <div class="catalog__header">
         <h1 class="catalog__title">Каталог товаров</h1>
-        <div class="catalog__filters">
+        <div class="catalog__filters" id="catalog-filters">
             <button class="catalog__filter active" data-filter="all">Все</button>
-            <button class="catalog__filter" data-filter="vases">Вазы</button>
-            <button class="catalog__filter" data-filter="frames">Рамки</button>
-            <button class="catalog__filter" data-filter="lighting">Освещение</button>
-            <button class="catalog__filter" data-filter="textiles">Текстиль</button>
-            <button class="catalog__filter" data-filter="planters">Кашпо</button>
-            <button class="catalog__filter" data-filter="candles">Свечи</button>
         </div>
     </div>
     <div class="catalog__grid" id="products-grid"></div>

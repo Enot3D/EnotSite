@@ -123,6 +123,7 @@
 
             if (page === 'catalog' && typeof catalog !== 'undefined') {
                 setTimeout(function() {
+                    renderCatalogFilters();
                     catalog.reinit();
                     renderCatalogAdminControls();
                     renderFavoriteButtons();

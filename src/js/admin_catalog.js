@@ -1,3 +1,14 @@
+function renderCatalogFilters() {
+    var container = document.getElementById('catalog-filters');
+    if (!container) return;
+    var categories = loadCategories();
+    var html = '<button class="catalog__filter active" data-filter="all">Все</button>';
+    categories.forEach(function(c) {
+        html += '<button class="catalog__filter" data-filter="' + escapeAttr(c.id) + '">' + escapeHtml(c.name) + '</button>';
+    });
+    container.innerHTML = html;
+}
+
 function loadProducts() {
     var saved = localStorage.getItem('enotspace_products');
     if (saved) return JSON.parse(saved);
