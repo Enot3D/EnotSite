@@ -46,11 +46,7 @@ function renderFavoriteButtons() {
 function getPromoCodes() {
     var saved = localStorage.getItem('enotspace_promos');
     if (saved) return JSON.parse(saved);
-    return [
-        { code: 'ENOT10', discount: 10, type: 'percent', description: 'Скидка 10%' },
-        { code: 'WELCOME', discount: 500, type: 'fixed', description: 'Скидка 500₽' },
-        { code: 'SPRING2025', discount: 15, type: 'percent', description: 'Скидка 15%' }
-    ];
+    return [];
 }
 
 function applyPromo(code, subtotal) {
@@ -164,18 +160,7 @@ function hasPurchased(productId) {
 function getReviews() {
     var saved = localStorage.getItem('enotspace_reviews');
     if (saved) return JSON.parse(saved);
-    var defaults = [
-        { id: 'rev-1', productId: 1, userId: 'USR-CLIENT-001', userName: 'Иван Петров', rating: 5, text: 'Отличная ваза! Качество.material превосходное, доставка быстрая.', date: '2025-05-10T10:00:00.000Z' },
-        { id: 'rev-2', productId: 1, userId: 'USR-002', userName: 'Анна М.', rating: 4, text: 'Красивая, но чуть меньше чем ожидала. В целом довольна.', date: '2025-05-15T14:30:00.000Z' },
-        { id: 'rev-3', productId: 3, userId: 'USR-003', userName: 'Дмитрий К.', rating: 5, text: 'Лампа потрясающая! Регулировка яркости работает идеально.', date: '2025-06-01T09:00:00.000Z' },
-        { id: 'rev-4', productId: 4, userId: 'USR-004', userName: 'Елена В.', rating: 5, text: 'Мягкая, приятная на ощупь. Кот в восторге!', date: '2025-06-05T18:20:00.000Z' },
-        { id: 'rev-5', productId: 6, userId: 'USR-CLIENT-001', userName: 'Иван Петров', rating: 5, text: 'Аромат невероятный! Горит ровно, воск натуральный.', date: '2025-06-10T20:00:00.000Z' },
-        { id: 'rev-6', productId: 2, userId: 'USR-005', userName: 'Ольга С.', rating: 4, text: 'Рамка красивая, дерево приятное. Рекомендую.', date: '2025-04-20T12:00:00.000Z' },
-        { id: 'rev-7', productId: 5, userId: 'USR-006', userName: 'Максим П.', rating: 5, text: 'Кашпо стильное, растение чувствует себя отлично.', date: '2025-05-22T16:00:00.000Z' },
-        { id: 'rev-8', productId: 3, userId: 'USR-007', userName: 'Мария Л.', rating: 5, text: 'Подарил маме — она в восторге. Качество на высоте.', date: '2025-06-12T11:00:00.000Z' }
-    ];
-    localStorage.setItem('enotspace_reviews', JSON.stringify(defaults));
-    return defaults;
+    return [];
 }
 
 function saveReviews(reviews) {
@@ -391,26 +376,26 @@ function loadAboutData() {
     if (saved) return JSON.parse(saved);
     return {
         blocks: [
-            { icon: 'layers', title: 'Что мы делаем', text: 'Мы — студия полного цикла 3D-технологий. От идеи до готового изделия: сканируем, моделируем, печатаем. Работаем с физическими лицами и бизнесом, от единичных деталей до серийного производства.' },
-            { icon: 'users', title: 'Наша команда', text: 'Инженеры-моделеры с опытом более 5 лет, операторы 3D-сканеров и печатников. Каждый проект — от Prototech до крупных промышленных предприятий.' },
-            { icon: 'clock', title: 'Наши сроки', text: 'Стандартный заказ — 5-7 дней. Ускоренный — 2-3 дня. Экспресс — 1 день. Точные сроки обсуждаем до начала работы, никаких скрытых задержек.' },
-            { icon: 'shield', title: 'Гарантия качества', text: 'Контроль качества на каждом этапе. Если деталь не соответствует — переделаем бесплатно. Используем сертифицированные материалы.' }
+            { icon: 'layers', title: 'О компании', text: 'Заполните информацию о вашей компании.' },
+            { icon: 'users', title: 'Команда', text: 'Расскажите о вашей команде.' },
+            { icon: 'clock', title: 'Сроки', text: 'Укажите ваши сроки работы.' },
+            { icon: 'shield', title: 'Гарантии', text: 'Опишите ваши гарантии качества.' }
         ],
         stats: [
-            { number: '500+', label: 'Заказов выполнено' },
-            { number: '150+', label: 'Довольных клиентов' },
-            { number: '5+', label: 'Лет опыта' },
-            { number: '24/7', label: 'Поддержка в чате' }
+            { number: '0', label: 'Заказов' },
+            { number: '0', label: 'Клиентов' },
+            { number: '0', label: 'Лет опыта' },
+            { number: '0', label: 'На связи' }
         ],
         equipment: [
-            { title: '3D-печать', text: 'FDM, SLA, SLS печатники. Материалы: PLA, PETG, ABS, нейлон, смола, металл.' },
-            { title: '3D-сканирование', text: 'Лазерные и структурированные сканеры. Точность до 0.05 мм.' },
-            { title: 'CAD/CAM', text: 'Fusion 360, SolidWorks, Blender, ZBrush. Parametric и художественное моделирование.' }
+            { title: 'Оборудование 1', text: 'Описание оборудования.' },
+            { title: 'Оборудование 2', text: 'Описание оборудования.' },
+            { title: 'Оборудование 3', text: 'Описание оборудования.' }
         ],
         contact: {
-            phone: '+7 (999) 123-45-67',
-            email: 'info@enotspace.ru',
-            address: 'г. Москва, ул. Примерная, д. 42'
+            phone: '',
+            email: '',
+            address: ''
         }
     };
 }
