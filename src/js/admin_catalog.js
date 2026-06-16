@@ -231,6 +231,30 @@ function openProductEditor(product) {
         var previewsContainer = document.getElementById('ed-upload-previews');
         var imagesTextarea = document.getElementById('ed-images');
 
+        function compressImage(file, maxWidth, quality) {
+            return new Promise(function(resolve) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var img = new Image();
+                    img.onload = function() {
+                        var canvas = document.createElement('canvas');
+                        var w = img.width;
+                        var h = img.height;
+                        if (w > maxWidth) {
+                            h = Math.round(h * maxWidth / w);
+                            w = maxWidth;
+                        }
+                        canvas.width = w;
+                        canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
         function handleFiles(files) {
             Array.from(files).forEach(function(file) {
                 if (!file.type.startsWith('image/')) return;
@@ -239,24 +263,16 @@ function openProductEditor(product) {
                 preview.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0f0f0;"><span style="font-size:11px;color:#999;">...</span></div><button type="button" class="ed-upload-preview__remove">&times;</button>';
                 previewsContainer.appendChild(preview);
 
-                var path = 'products/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-                var ref = storage.ref(path);
-                ref.put(file).then(function(snapshot) {
-                    return snapshot.ref.getDownloadURL();
-                }).then(function(url) {
+                compressImage(file, 800, 0.7).then(function(dataUrl) {
                     preview.classList.remove('ed-upload-preview--loading');
-                    preview.querySelector('div').innerHTML = '<img src="' + url + '" alt="">';
+                    preview.querySelector('div').innerHTML = '<img src="' + dataUrl + '" alt="">';
                     var currentVal = imagesTextarea.value.trim();
-                    imagesTextarea.value = currentVal ? currentVal + '\n' + url : url;
+                    imagesTextarea.value = currentVal ? currentVal + '\n' + dataUrl : dataUrl;
                     preview.querySelector('.ed-upload-preview__remove').addEventListener('click', function() {
                         preview.remove();
-                        var lines = imagesTextarea.value.split('\n').filter(function(l) { return l.trim() !== url; });
+                        var lines = imagesTextarea.value.split('\n').filter(function(l) { return l.trim() !== dataUrl; });
                         imagesTextarea.value = lines.join('\n');
-                        storage.refFromURL(url).delete().catch(function() {});
                     });
-                }).catch(function(err) {
-                    preview.remove();
-                    alert('Ошибка загрузки: ' + err.message);
                 });
             });
         }
