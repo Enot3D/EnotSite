@@ -99,6 +99,8 @@ class Catalog {
                         </div>
                     </div>
                     <div class="product-card__title">${escapeHtml(product.name)}</div>
+                    ${product.stockQty != null && product.stockQty <= 5 && product.stockQty > 0 ? '<div class="product-card__stock-low">Осталось ' + product.stockQty + ' шт.</div>' : ''}
+                    ${product.stockQty === 0 ? '<div class="product-card__stock-out">Нет в наличии</div>' : ''}
                 </div>
             </div>
         `;
@@ -250,6 +252,11 @@ class Catalog {
         var specsEl = document.getElementById('modal-specs');
         if (specsEl) {
             var specsHtml = '';
+            if (product.stockQty != null) {
+                var stockClass = product.stockQty === 0 ? 'color:#e53935' : (product.stockQty <= 5 ? 'color:#e65100' : 'color:#4caf50');
+                var stockText = product.stockQty === 0 ? 'Нет в наличии' : 'В наличии: ' + product.stockQty + ' шт.';
+                specsHtml += '<div class="product-modal__spec-row"><span class="product-modal__spec-key">Наличие:</span><span class="product-modal__spec-val" style="' + stockClass + '">' + stockText + '</span></div>';
+            }
             if (product.specs && product.specs.length) {
                 product.specs.forEach(function(s) {
                     specsHtml += '<div class="product-modal__spec-row"><span class="product-modal__spec-key">' + escapeHtml(s.key) + ':</span><span class="product-modal__spec-val">' + escapeHtml(s.value) + '</span></div>';

@@ -169,6 +169,10 @@ function openProductEditor(product) {
                         '<div class="admin-form__group"><label class="admin-form__label">Материал</label><input class="admin-form__input" type="text" id="ed-material" value="' + escapeAttr(product ? product.material : '') + '"></div>' +
                     '</div>' +
                     '<div class="admin-form__group"><label class="admin-form__label"><input type="checkbox" id="ed-stock"' + (product && product.inStock === false ? '' : ' checked') + '> В наличии</label></div>' +
+                    '<div class="admin-form__row">' +
+                        '<div class="admin-form__group"><label class="admin-form__label">Количество на складе</label><input class="admin-form__input" type="number" id="ed-stock-qty" min="0" value="' + (product && product.stockQty != null ? product.stockQty : '') + '" placeholder="0"></div>' +
+                        '<div class="admin-form__group"><label class="admin-form__label">Рейтинг</label><input class="admin-form__input" type="number" id="ed-rating" min="0" max="5" step="0.1" value="' + (product && product.rating ? product.rating : '') + '" placeholder="4.5"></div>' +
+                    '</div>' +
                     '<div class="admin-form__group"><label class="admin-form__label">URL изображений (по одному на строку)</label><textarea class="admin-form__textarea" id="ed-images" rows="3" placeholder="https://...">' + escapeHtml(images) + '</textarea></div>' +
                     '<div class="admin-form__row">' +
                         '<div class="admin-form__group"><label class="admin-form__label">Названия цветов (через запятую)</label><input class="admin-form__input" type="text" id="ed-color-names" value="' + escapeAttr(colorNames) + '"></div>' +
@@ -255,8 +259,9 @@ function openProductEditor(product) {
                 material: sanitizeInput(document.getElementById('ed-material').value, 200),
                 colors: colors,
                 inStock: document.getElementById('ed-stock').checked,
-                rating: parseFloat(document.getElementById('ed-rating').value) || 4.5,
-                reviews: parseInt(document.getElementById('ed-reviews').value) || 0,
+                stockQty: parseInt(document.getElementById('ed-stock-qty').value) || 0,
+                rating: parseFloat(document.getElementById('ed-rating').value) || 0,
+                reviews: parseInt(document.getElementById('ed-reviews') ? document.getElementById('ed-reviews').value : 0) || 0,
                 specs: specsData
             };
 

@@ -195,7 +195,21 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    margin-bottom: 12px;
+    margin-bottom: 4px;
+}
+
+.product-card__stock-low {
+    font-size: 11px;
+    color: #e65100;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.product-card__stock-out {
+    font-size: 11px;
+    color: #e53935;
+    font-weight: 500;
+    margin-bottom: 4px;
 }
 
 .product-card__cart-wrap {
