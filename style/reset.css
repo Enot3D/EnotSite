@@ -378,3 +378,22 @@ input[type='file'] {
 [data-theme="dark"] .cart-page__items {
     background: var(--bg);
 }
+
+[data-theme="dark"] .ed-upload-zone {
+    background: #2a2a2a;
+    border-color: #444;
+}
+
+[data-theme="dark"] .ed-upload-zone:hover,
+[data-theme="dark"] .ed-upload-zone--active {
+    background: #333;
+    border-color: var(--primary);
+}
+
+[data-theme="dark"] .ed-upload-preview {
+    border-color: #444;
+}
+
+[data-theme="dark"] .ed-upload-preview div {
+    background: #333;
+}

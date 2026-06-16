@@ -234,22 +234,30 @@ function openProductEditor(product) {
         function handleFiles(files) {
             Array.from(files).forEach(function(file) {
                 if (!file.type.startsWith('image/')) return;
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    var dataUrl = e.target.result;
+                var preview = document.createElement('div');
+                preview.className = 'ed-upload-preview ed-upload-preview--loading';
+                preview.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0f0f0;"><span style="font-size:11px;color:#999;">...</span></div><button type="button" class="ed-upload-preview__remove">&times;</button>';
+                previewsContainer.appendChild(preview);
+
+                var path = 'products/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                var ref = storage.ref(path);
+                ref.put(file).then(function(snapshot) {
+                    return snapshot.ref.getDownloadURL();
+                }).then(function(url) {
+                    preview.classList.remove('ed-upload-preview--loading');
+                    preview.querySelector('div').innerHTML = '<img src="' + url + '" alt="">';
                     var currentVal = imagesTextarea.value.trim();
-                    imagesTextarea.value = currentVal ? currentVal + '\n' + dataUrl : dataUrl;
-                    var preview = document.createElement('div');
-                    preview.className = 'ed-upload-preview';
-                    preview.innerHTML = '<img src="' + dataUrl + '" alt=""><button type="button" class="ed-upload-preview__remove">&times;</button>';
+                    imagesTextarea.value = currentVal ? currentVal + '\n' + url : url;
                     preview.querySelector('.ed-upload-preview__remove').addEventListener('click', function() {
                         preview.remove();
-                        var lines = imagesTextarea.value.split('\n').filter(function(l) { return l.trim() !== dataUrl.trim(); });
+                        var lines = imagesTextarea.value.split('\n').filter(function(l) { return l.trim() !== url; });
                         imagesTextarea.value = lines.join('\n');
+                        storage.refFromURL(url).delete().catch(function() {});
                     });
-                    previewsContainer.appendChild(preview);
-                };
-                reader.readAsDataURL(file);
+                }).catch(function(err) {
+                    preview.remove();
+                    alert('Ошибка загрузки: ' + err.message);
+                });
             });
         }
 
