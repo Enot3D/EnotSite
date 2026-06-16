@@ -22,6 +22,7 @@ class Catalog {
         if (grid) {
             this.syncCart(JSON.parse(localStorage.getItem('enotspace_cart') || '[]'));
             this.renderProducts();
+            this.setupCardEvents();
             this.setupFilters();
             this.setupSearch();
             this.setupModal();
@@ -65,7 +66,7 @@ class Catalog {
         }
         
         grid.innerHTML = filtered.map(product => this.createCard(product)).join('');
-        this.setupCardEvents();
+        this.syncCardButtons();
         if (typeof renderFavoriteButtons === 'function') renderFavoriteButtons();
         if (typeof renderCatalogAdminControls === 'function') renderCatalogAdminControls();
     }
@@ -107,43 +108,58 @@ class Catalog {
     }
     
     setupCardEvents() {
-        document.querySelectorAll('.product-card').forEach(card => {
-            const productId = parseInt(card.dataset.id);
-            const wrap = card.querySelector('.product-card__cart-wrap');
-            const addBtn = wrap.querySelector('.product-card__add-btn');
-            const counter = wrap.querySelector('.product-card__cart-counter');
-            const quantityEl = wrap.querySelector('.product-card__cart-quantity');
-            
-            var localCart = JSON.parse(localStorage.getItem('enotspace_cart') || '[]');
+        var self = this;
+        var grid = document.getElementById('products-grid');
+        if (!grid || grid._delegated) return;
+        grid._delegated = true;
+
+        grid.addEventListener('click', function(e) {
+            var card = e.target.closest('.product-card');
+            if (!card) return;
+            var productId = parseInt(card.dataset.id);
+
+            if (e.target.closest('.product-card__fav-btn')) return;
+
+            if (e.target.closest('[data-action="increase"]')) {
+                e.stopPropagation();
+                self.addToCart(productId);
+                return;
+            }
+            if (e.target.closest('[data-action="decrease"]')) {
+                e.stopPropagation();
+                self.removeFromCart(productId);
+                return;
+            }
+            if (e.target.closest('.product-card__add-btn')) {
+                e.stopPropagation();
+                self.addToCart(productId);
+                return;
+            }
+
+            self.openModal(productId);
+        });
+
+        this.syncCardButtons();
+    }
+
+    syncCardButtons() {
+        var localCart = JSON.parse(localStorage.getItem('enotspace_cart') || '[]');
+        document.querySelectorAll('.product-card').forEach(function(card) {
+            var productId = parseInt(card.dataset.id);
             var existing = localCart.find(function(i) { return i.productId === productId; });
-            const inCart = existing ? existing.quantity : 0;
+            var inCart = existing ? existing.quantity : 0;
+            var addBtn = card.querySelector('.product-card__add-btn');
+            var counter = card.querySelector('.product-card__cart-counter');
+            var quantityEl = card.querySelector('.product-card__cart-quantity');
+            if (!addBtn || !counter) return;
             if (inCart > 0) {
                 addBtn.classList.add('hidden');
                 counter.classList.add('visible');
                 quantityEl.textContent = inCart;
+            } else {
+                addBtn.classList.remove('hidden');
+                counter.classList.remove('visible');
             }
-            
-            card.addEventListener('click', (e) => {
-                if (e.target.closest('.product-card__cart-btn') || e.target.closest('.product-card__cart-wrap') || e.target.closest('.product-card__fav-btn')) {
-                    return;
-                }
-                this.openModal(productId);
-            });
-            
-            addBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.addToCart(productId);
-            });
-            
-            counter.querySelector('[data-action="increase"]').addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.addToCart(productId);
-            });
-            
-            counter.querySelector('[data-action="decrease"]').addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.removeFromCart(productId);
-            });
         });
     }
     
