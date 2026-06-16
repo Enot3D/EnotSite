@@ -1,5 +1,5 @@
 function renderCatalogFilters() {
-    var container = document.getElementById('catalog-filters');
+    var container = document.getElementById('catalog-filters-panel');
     if (!container) return;
     loadCategories().then(function(categories) {
         var html = '<button class="catalog__filter active" data-filter="all">Все</button>';
@@ -7,6 +7,7 @@ function renderCatalogFilters() {
             html += '<button class="catalog__filter" data-filter="' + escapeAttr(c.id) + '">' + escapeHtml(c.name) + '</button>';
         });
         container.innerHTML = html;
+        if (typeof catalog !== 'undefined') catalog.setupFilters();
     });
 }
 

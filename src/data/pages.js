@@ -56,11 +56,18 @@ PAGES.footer = `<footer class="site-footer">
 </footer>`;
 
 PAGES.catalog = `<section class="catalog">
-    <div class="catalog__header">
-        <h1 class="catalog__title">Каталог</h1>
-        <div class="catalog__filters" id="catalog-filters">
-            <button class="catalog__filter active" data-filter="all">Все</button>
+    <div class="catalog__toolbar">
+        <div class="catalog__search">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="catalog__search-input" id="catalog-search" placeholder="Поиск...">
         </div>
+        <button class="catalog__filter-btn" id="catalog-filter-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/><circle cx="6" cy="12" r="2" fill="currentColor"/><circle cx="10" cy="18" r="2" fill="currentColor"/></svg>
+            Фильтр
+        </button>
+    </div>
+    <div class="catalog__filters-panel" id="catalog-filters-panel" style="display: none;">
+        <button class="catalog__filter active" data-filter="all">Все</button>
     </div>
     <div class="catalog__grid" id="products-grid"></div>
 </section>
@@ -75,31 +82,34 @@ PAGES.catalog = `<section class="catalog">
             </div>
             <div class="product-modal__info">
                 <h2 class="product-modal__title" id="modal-title"></h2>
-                <div class="product-modal__rating">
-                    <span class="product-modal__stars" id="modal-stars"></span>
-                    <span class="product-modal__reviews" id="modal-reviews"></span>
-                </div>
-                <p class="product-modal__description" id="modal-description"></p>
                 <div class="product-modal__price-row">
                     <div class="product-modal__price" id="modal-price"></div>
-                    <div class="product-modal__cart">
-                        <div class="product-modal__cart-counter" id="modal-cart-counter" style="display: none;">
-                            <button class="product-modal__cart-btn" id="modal-decrease">−</button>
-                            <span class="product-modal__cart-quantity" id="modal-quantity">1</span>
-                            <button class="product-modal__cart-btn" id="modal-increase">+</button>
-                        </div>
-                        <button class="product-modal__add-btn" id="modal-add-to-cart">В корзину</button>
+                    <button class="product-modal__add-btn" id="modal-add-to-cart">В корзину</button>
+                    <div class="product-modal__cart-counter" id="modal-cart-counter" style="display: none;">
+                        <button class="product-modal__cart-btn" id="modal-decrease">−</button>
+                        <span class="product-modal__cart-quantity" id="modal-quantity">1</span>
+                        <button class="product-modal__cart-btn" id="modal-increase">+</button>
                     </div>
                 </div>
-                <div class="product-modal__stock" id="modal-stock"></div>
                 <div class="product-modal__colors" id="modal-colors">
                     <span class="product-modal__colors-label">Выбрать цвет:</span>
                     <div class="product-modal__color-options" id="modal-color-options"></div>
                 </div>
+                <div class="product-modal__reviews-link" id="modal-reviews-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    <span id="modal-reviews-count">Отзывы</span>
+                </div>
                 <div class="product-modal__specs" id="modal-specs"></div>
-                <div class="product-modal__material">
-                    <span class="product-modal__material-label">Материал:</span>
-                    <span class="product-modal__material-value" id="modal-material"></span>
+                <div class="product-modal__delivery" id="modal-delivery">
+                    <div class="product-modal__delivery-title">Изготовление и доставка:</div>
+                    <div class="product-modal__delivery-item" id="modal-stock">
+                        <span class="product-modal__delivery-dot product-modal__delivery-dot--green"></span>
+                        <span>В наличии — отправка сегодня</span>
+                    </div>
+                    <div class="product-modal__delivery-item">
+                        <span class="product-modal__delivery-dot product-modal__delivery-dot--blue"></span>
+                        <span>Доставка по всей России</span>
+                    </div>
                 </div>
             </div>
         </div>

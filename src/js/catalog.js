@@ -122,7 +122,7 @@ class Catalog {
             }
             
             card.addEventListener('click', (e) => {
-                if (e.target.closest('.product-card__cart-btn') || e.target.closest('.product-card__cart-wrap')) {
+                if (e.target.closest('.product-card__cart-btn') || e.target.closest('.product-card__cart-wrap') || e.target.closest('.product-card__fav-btn')) {
                     return;
                 }
                 this.openModal(productId);
