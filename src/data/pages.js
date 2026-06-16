@@ -360,12 +360,14 @@ PAGES.account = `<section class="account">
     </div>
     <div class="account__tabs" id="account-tabs">
         <button class="account__tab active" data-tab="orders">Мои заказы</button>
+        <button class="account__tab" data-tab="client-chat">Чат</button>
         <button class="account__tab" data-tab="settings">Настройки</button>
     </div>
     <div class="account__tab-content active" id="tab-orders">
         <div class="account__orders" id="account-orders"></div>
         <div class="order-detail" id="order-detail" style="display:none;"></div>
     </div>
+    <div class="account__tab-content" id="tab-client-chat"></div>
     <div class="account__tab-content" id="tab-settings">
         <div class="account-settings">
             <h3 class="account-settings__title">Личные данные</h3>
