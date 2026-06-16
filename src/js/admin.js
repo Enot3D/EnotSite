@@ -334,107 +334,180 @@ function renderUsers() {
     });
 }
 
+var adminChatData = { clients: [], allProjects: [] };
+
 function renderAdminChat() {
     var container = document.getElementById('tab-admin-chat');
     if (!container) return;
 
+    container.innerHTML = '<div class="admin-chat">' +
+        '<div class="admin-chat__sidebar" id="admin-chat-sidebar"><div class="admin-chat__empty"><p>Загрузка...</p></div></div>' +
+        '<div class="admin-chat__main" id="admin-chat-main"><div class="admin-chat__placeholder"><p>Выберите клиента</p></div></div>' +
+        '</div>';
+
     db.collection('projects').orderBy('createdAt', 'desc').get().then(function(snapshot) {
-        var projects = [];
+        var allProjects = [];
         snapshot.forEach(function(doc) {
-            var data = doc.data();
-            if (data.messages && data.messages.length > 0) {
-                projects.push(Object.assign({ _docId: doc.id }, data));
+            allProjects.push(Object.assign({ _docId: doc.id }, doc.data()));
+        });
+        adminChatData.allProjects = allProjects;
+
+        var clientsMap = {};
+        allProjects.forEach(function(p) {
+            var uid = p.userId || (p.contact ? p.contact.phone : 'unknown');
+            if (!clientsMap[uid]) {
+                clientsMap[uid] = {
+                    userId: uid,
+                    name: p.contact ? p.contact.name : 'Клиент',
+                    phone: p.contact ? p.contact.phone : '',
+                    email: p.contact ? p.contact.email : '',
+                    orders: [],
+                    allMessages: [],
+                    lastDate: p.createdAt
+                };
+            }
+            clientsMap[uid].orders.push(p);
+            if (p.messages && p.messages.length) {
+                clientsMap[uid].allMessages = clientsMap[uid].allMessages.concat(p.messages);
+            }
+            if (new Date(p.createdAt) > new Date(clientsMap[uid].lastDate)) {
+                clientsMap[uid].lastDate = p.createdAt;
             }
         });
 
-        var html = '<div class="admin-chat-list">';
-        html += '<h2 class="admin-chat-list__title">Чаты с клиентами</h2>';
-
-        if (projects.length === 0) {
-            html += '<p class="admin-chat-list__empty">Нет активных чатов</p>';
-        } else {
-            projects.forEach(function(p) {
-                var lastMsg = p.messages[p.messages.length - 1];
-                var clientName = p.contact ? p.contact.name : 'Клиент';
-                var msgPreview = lastMsg.text.substring(0, 80) + (lastMsg.text.length > 80 ? '...' : '');
-                var date = new Date(lastMsg.date).toLocaleString('ru-RU');
-
-                html += '<div class="admin-chat-item" data-order-id="' + p._docId + '">';
-                html += '<div class="admin-chat-item__header">';
-                html += '<span class="admin-chat-item__name">' + escapeHtml(clientName) + '</span>';
-                html += '<span class="admin-chat-item__date">' + escapeHtml(date) + '</span>';
-                html += '</div>';
-                html += '<div class="admin-chat-item__preview">' + escapeHtml(msgPreview) + '</div>';
-                html += '</div>';
-            });
-        }
-        html += '</div>';
-        html += '<div class="admin-chat-detail" id="admin-chat-detail" style="display:none;"></div>';
-
-        container.innerHTML = html;
-
-        container.querySelectorAll('.admin-chat-item').forEach(function(item) {
-            item.addEventListener('click', function() {
-                var orderId = item.dataset.orderId;
-                var project = projects.find(function(p) { return p._docId === orderId; });
-                if (project) showAdminChatDetail(project);
-            });
+        var clients = Object.values(clientsMap).sort(function(a, b) {
+            return new Date(b.lastDate) - new Date(a.lastDate);
         });
-    }).catch(function() {
-        container.innerHTML = '<p class="admin-chat-list__empty">Ошибка загрузки чатов</p>';
+        adminChatData.clients = clients;
+
+        renderChatSidebar(clients);
+    }).catch(function(err) {
+        console.error('Ошибка загрузки чатов:', err);
+        container.querySelector('#admin-chat-sidebar').innerHTML = '<div class="admin-chat__empty"><p>Ошибка загрузки</p></div>';
     });
 }
 
-function showAdminChatDetail(p) {
-    var list = document.querySelector('.admin-chat-list');
-    var detail = document.getElementById('admin-chat-detail');
-    if (!list || !detail) return;
+function renderChatSidebar(clients) {
+    var sidebar = document.getElementById('admin-chat-sidebar');
+    if (!sidebar) return;
 
-    list.style.display = 'none';
-    detail.style.display = 'block';
+    if (clients.length === 0) {
+        sidebar.innerHTML = '<div class="admin-chat__empty"><p>Нет клиентов</p></div>';
+        return;
+    }
 
-    var clientName = p.contact ? p.contact.name : 'Клиент';
+    var html = '<div class="admin-chat__sidebar-header"><h3>Клиенты</h3></div>';
+    html += '<div class="admin-chat__client-list">';
+    clients.forEach(function(c, i) {
+        var sortedMsgs = c.allMessages.slice().sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+        var lastMsg = sortedMsgs.length ? sortedMsgs[0] : null;
+        var preview = lastMsg ? lastMsg.text.substring(0, 40) + (lastMsg.text.length > 40 ? '...' : '') : 'Нет сообщений';
+        var date = lastMsg ? new Date(lastMsg.date).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}) : '';
 
-    var html = '<button class="order-detail__back" id="admin-chat-back">&larr; Назад</button>';
-    html += '<div class="order-detail__card">';
-    html += '<h3>Чат с ' + escapeHtml(clientName) + '</h3>';
-    html += '<div class="order-detail__chat" id="admin-chat-messages">';
-    if (p.messages && p.messages.length) {
-        p.messages.forEach(function(msg) {
-            var isAdminMsg = msg.from === 'admin';
-            html += '<div class="chat-msg ' + (isAdminMsg ? 'chat-msg--admin' : 'chat-msg--user') + '">';
-            html += '<div class="chat-msg__text">' + escapeHtml(msg.text) + '</div>';
-            html += '<div class="chat-msg__date">' + escapeHtml(new Date(msg.date).toLocaleString('ru-RU')) + '</div>';
-            html += '</div>';
+        html += '<div class="admin-chat__client" data-index="' + i + '">';
+        html += '<div class="admin-chat__client-avatar">' + escapeHtml(c.name.charAt(0).toUpperCase()) + '</div>';
+        html += '<div class="admin-chat__client-info">';
+        html += '<div class="admin-chat__client-name">' + escapeHtml(c.name) + '</div>';
+        html += '<div class="admin-chat__client-last">' + escapeHtml(preview) + '</div>';
+        html += '</div>';
+        html += '<div class="admin-chat__client-meta">';
+        html += '<div class="admin-chat__client-date">' + escapeHtml(date) + '</div>';
+        html += '</div>';
+        html += '</div>';
+    });
+    html += '</div>';
+
+    sidebar.innerHTML = html;
+
+    sidebar.querySelectorAll('.admin-chat__client').forEach(function(item) {
+        item.addEventListener('click', function() {
+            sidebar.querySelectorAll('.admin-chat__client').forEach(function(el) { el.classList.remove('active'); });
+            item.classList.add('active');
+            var idx = parseInt(item.dataset.index);
+            showClientChat(clients[idx]);
+        });
+    });
+}
+
+function showClientChat(client) {
+    var main = document.getElementById('admin-chat-main');
+    if (!main) return;
+
+    var typeNames = { fullcycle: 'Полный цикл', print: 'Печать по модели', modeling: 'Моделирование', scanning: 'Сканирование', order: 'Заказ из каталога' };
+    var statusNames = { new: 'Новый', in_progress: 'В работе', completed: 'Готово', cancelled: 'Отменён' };
+    var statusColors = { new: '#1565c0', in_progress: '#e65100', completed: '#2e7d32', cancelled: '#c62828' };
+
+    var html = '<div class="admin-chat__header">';
+    html += '<div class="admin-chat__header-info">';
+    html += '<div class="admin-chat__header-avatar">' + escapeHtml(client.name.charAt(0).toUpperCase()) + '</div>';
+    html += '<div><div class="admin-chat__header-name">' + escapeHtml(client.name) + '</div>';
+    html += '<div class="admin-chat__header-contact">' + escapeHtml(client.phone) + (client.email ? ' · ' + escapeHtml(client.email) : '') + '</div></div>';
+    html += '</div>';
+    html += '<div class="admin-chat__header-orders">';
+    client.orders.forEach(function(p) {
+        var color = statusColors[p.status] || '#666';
+        html += '<span class="admin-chat__order-badge" style="background:' + color + '22;color:' + color + ';">' + escapeHtml(typeNames[p.type] || p.type || 'Заказ') + '</span>';
+    });
+    html += '</div></div>';
+
+    var sortedMessages = client.allMessages.slice().sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+
+    html += '<div class="admin-chat__messages" id="admin-chat-messages">';
+    if (sortedMessages.length === 0) {
+        html += '<div class="admin-chat__no-messages"><p>Нет сообщений</p></div>';
+    } else {
+        sortedMessages.forEach(function(msg) {
+            var isAdmin = msg.from === 'admin';
+            html += '<div class="admin-chat__msg ' + (isAdmin ? 'admin-chat__msg--admin' : 'admin-chat__msg--user') + '">';
+            html += '<div class="admin-chat__msg-bubble">' + escapeHtml(msg.text) + '</div>';
+            html += '<div class="admin-chat__msg-meta">';
+            html += '<span class="admin-chat__msg-date">' + escapeHtml(new Date(msg.date).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})) + '</span>';
+            html += '</div></div>';
         });
     }
     html += '</div>';
-    html += '<div class="order-detail__chat-input">';
-    html += '<input type="text" class="order-detail__chat-field" id="admin-chat-input" placeholder="Ответ клиенту...">';
-    html += '<button class="order-detail__chat-send" id="admin-chat-send">Отправить</button>';
-    html += '</div></div>';
 
-    detail.innerHTML = html;
+    html += '<div class="admin-chat__input-area">';
+    html += '<input type="text" id="admin-chat-input" placeholder="Сообщение..." class="admin-chat__input">';
+    html += '<button id="admin-chat-send" class="admin-chat__send-btn">Отправить</button>';
+    html += '</div>';
 
-    document.getElementById('admin-chat-back').addEventListener('click', function() {
-        detail.style.display = 'none';
-        list.style.display = '';
-    });
+    main.innerHTML = html;
+
+    var messagesEl = document.getElementById('admin-chat-messages');
+    messagesEl.scrollTop = messagesEl.scrollHeight;
 
     var chatInput = document.getElementById('admin-chat-input');
     var chatSend = document.getElementById('admin-chat-send');
-    if (chatSend && chatInput) {
-        chatSend.addEventListener('click', function() {
-            var text = sanitizeInput(chatInput.value, 500);
-            if (!text) return;
-            if (!p.messages) p.messages = [];
-            p.messages.push({ from: 'admin', text: text, date: new Date().toISOString() });
-            db.collection('projects').doc(p._docId || p.id).update({ messages: p.messages });
-            chatInput.value = '';
-            showAdminChatDetail(p);
-        });
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') chatSend.click();
-        });
+
+    function sendMessage() {
+        var text = sanitizeInput(chatInput.value, 500);
+        if (!text) return;
+
+        var targetProject = client.orders.find(function(p) {
+            return p.messages && p.messages.length < 50;
+        }) || client.orders[0];
+        if (!targetProject) return;
+
+        if (!targetProject.messages) targetProject.messages = [];
+        targetProject.messages.push({ from: 'admin', text: text, date: new Date().toISOString() });
+        client.allMessages.push({ from: 'admin', text: text, date: new Date().toISOString() });
+
+        db.collection('projects').doc(targetProject._docId).update({ messages: targetProject.messages });
+
+        chatInput.value = '';
+
+        var msgHtml = '<div class="admin-chat__msg admin-chat__msg--admin">';
+        msgHtml += '<div class="admin-chat__msg-bubble">' + escapeHtml(text) + '</div>';
+        msgHtml += '<div class="admin-chat__msg-meta">';
+        msgHtml += '<span class="admin-chat__msg-date">' + escapeHtml(new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})) + '</span>';
+        msgHtml += '</div></div>';
+        messagesEl.insertAdjacentHTML('beforeend', msgHtml);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
     }
+
+    chatSend.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
+    });
 }

@@ -81,9 +81,12 @@ function initFullcycle() {
 
     function nextStep() {
         if (!validateStep()) return;
+        if (currentStep === totalSteps - 1) {
+            submitProject();
+            return;
+        }
         if (currentStep < totalSteps) {
             currentStep++; updateUI();
-            if (currentStep === totalSteps) submitProject();
         }
     }
 
@@ -147,6 +150,8 @@ function initFullcycle() {
         nextBtn.textContent = 'Загрузка...';
         nextBtn.disabled = true;
 
+        user = getCurrentUser();
+
         var resizePromises = files.map(function(f) {
             return resizeImage(f, 800, 0.7);
         });
@@ -160,7 +165,7 @@ function initFullcycle() {
                 description: sanitizeInput(document.getElementById('project-desc').value, 2000),
                 material: document.getElementById('project-material').value,
                 urgency: document.getElementById('project-urgency').value,
-                userId: user ? user.id : null,
+                userId: user.id,
                 contact: {
                     name: sanitizeInput(document.getElementById('contact-name').value, 100),
                     phone: sanitizeInput(document.getElementById('contact-phone').value, 20),
@@ -171,6 +176,11 @@ function initFullcycle() {
                 timeline: [{ status: 'new', date: new Date().toISOString(), text: 'Заявка создана' }]
             };
             return db.collection('projects').add(projectData);
+        }).then(function() {
+            if (currentStep === totalSteps - 1) {
+                currentStep = totalSteps;
+                updateUI();
+            }
         }).catch(function(err) {
             console.error('Ошибка сохранения проекта:', err);
             alert('Ошибка отправки: ' + err.message);
