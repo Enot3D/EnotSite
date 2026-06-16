@@ -178,7 +178,16 @@ function openProductEditor(product) {
                         '<div class="admin-form__group"><label class="admin-form__label">Количество на складе</label><input class="admin-form__input" type="number" id="ed-stock-qty" min="0" value="' + (product && product.stockQty != null ? product.stockQty : '') + '" placeholder="0"></div>' +
                         '<div class="admin-form__group"><label class="admin-form__label">Рейтинг</label><input class="admin-form__input" type="number" id="ed-rating" min="0" max="5" step="0.1" value="' + (product && product.rating ? product.rating : '') + '" placeholder="4.5"></div>' +
                     '</div>' +
-                    '<div class="admin-form__group"><label class="admin-form__label">URL изображений (по одному на строку)</label><textarea class="admin-form__textarea" id="ed-images" rows="3" placeholder="https://...">' + escapeHtml(images) + '</textarea></div>' +
+                    '<div class="admin-form__group"><label class="admin-form__label">Изображения товара</label>' +
+                        '<div class="ed-upload-zone" id="ed-upload-zone">' +
+                            '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>' +
+                            '<p>Перетащите фото сюда</p>' +
+                            '<p style="font-size:12px;color:#999;">или</p>' +
+                            '<label class="ed-upload-btn">Выберите файлы<input type="file" id="ed-file-input" multiple accept="image/*" hidden></label>' +
+                        '</div>' +
+                        '<div class="ed-upload-previews" id="ed-upload-previews"></div>' +
+                        '<textarea class="admin-form__textarea" id="ed-images" rows="2" style="margin-top:8px;" placeholder="Или вставьте URL изображений (по одному на строку)">' + escapeHtml(images) + '</textarea>' +
+                    '</div>' +
                     '<div class="admin-form__row">' +
                         '<div class="admin-form__group"><label class="admin-form__label">Названия цветов (через запятую)</label><input class="admin-form__input" type="text" id="ed-color-names" value="' + escapeAttr(colorNames) + '"></div>' +
                         '<div class="admin-form__group"><label class="admin-form__label">HEX цвета (через запятую)</label><input class="admin-form__input" type="text" id="ed-color-hex" value="' + escapeAttr(colorHexes) + '"></div>' +
@@ -216,6 +225,69 @@ function openProductEditor(product) {
             list.appendChild(row);
             row.querySelector('.specs-remove').addEventListener('click', function() { row.remove(); });
         });
+
+        var uploadZone = document.getElementById('ed-upload-zone');
+        var fileInput = document.getElementById('ed-file-input');
+        var previewsContainer = document.getElementById('ed-upload-previews');
+        var imagesTextarea = document.getElementById('ed-images');
+
+        function handleFiles(files) {
+            Array.from(files).forEach(function(file) {
+                if (!file.type.startsWith('image/')) return;
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var dataUrl = e.target.result;
+                    var currentVal = imagesTextarea.value.trim();
+                    imagesTextarea.value = currentVal ? currentVal + '\n' + dataUrl : dataUrl;
+                    var preview = document.createElement('div');
+                    preview.className = 'ed-upload-preview';
+                    preview.innerHTML = '<img src="' + dataUrl + '" alt=""><button type="button" class="ed-upload-preview__remove">&times;</button>';
+                    preview.querySelector('.ed-upload-preview__remove').addEventListener('click', function() {
+                        preview.remove();
+                        var lines = imagesTextarea.value.split('\n').filter(function(l) { return l.trim() !== dataUrl.trim(); });
+                        imagesTextarea.value = lines.join('\n');
+                    });
+                    previewsContainer.appendChild(preview);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        fileInput.addEventListener('change', function() {
+            handleFiles(fileInput.files);
+            fileInput.value = '';
+        });
+
+        uploadZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadZone.classList.add('ed-upload-zone--active');
+        });
+
+        uploadZone.addEventListener('dragleave', function() {
+            uploadZone.classList.remove('ed-upload-zone--active');
+        });
+
+        uploadZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadZone.classList.remove('ed-upload-zone--active');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        if (images) {
+            images.split('\n').forEach(function(url) {
+                url = url.trim();
+                if (!url) return;
+                var preview = document.createElement('div');
+                preview.className = 'ed-upload-preview';
+                preview.innerHTML = '<img src="' + url + '" alt=""><button type="button" class="ed-upload-preview__remove">&times;</button>';
+                preview.querySelector('.ed-upload-preview__remove').addEventListener('click', function() {
+                    preview.remove();
+                    var lines = imagesTextarea.value.split('\n').filter(function(l) { return l.trim() !== url; });
+                    imagesTextarea.value = lines.join('\n');
+                });
+                previewsContainer.appendChild(preview);
+            });
+        }
 
         modal.querySelectorAll('.specs-remove').forEach(function(btn) {
             btn.addEventListener('click', function() {

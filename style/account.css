@@ -1181,6 +1181,98 @@
 
 .cat-add .admin-form__input { flex: 1; }
 
+.ed-upload-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+    border: 2px dashed #ddd;
+    border-radius: 10px;
+    background: #fafafa;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: center;
+}
+
+.ed-upload-zone:hover {
+    border-color: var(--primary, #f98130);
+    background: #fff5f0;
+}
+
+.ed-upload-zone--active {
+    border-color: var(--primary, #f98130);
+    background: #fff5f0;
+}
+
+.ed-upload-zone p {
+    margin: 0;
+    font-size: 13px;
+    color: #999;
+}
+
+.ed-upload-btn {
+    padding: 8px 18px;
+    background: var(--primary, #f98130);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-family: 'Calibri', sans-serif;
+}
+
+.ed-upload-btn:hover {
+    background: var(--primary-hover, #e5722a);
+}
+
+.ed-upload-previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.ed-upload-preview {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #f0f0f0;
+}
+
+.ed-upload-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ed-upload-preview__remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.ed-upload-preview__remove:hover {
+    background: #e53935;
+}
+
 .cat-list {
     display: flex;
     flex-direction: column;
