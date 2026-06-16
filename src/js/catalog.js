@@ -113,6 +113,8 @@ class Catalog {
         if (!grid || grid._delegated) return;
         grid._delegated = true;
 
+        var lastCartAction = {};
+
         grid.addEventListener('click', function(e) {
             var card = e.target.closest('.product-card');
             if (!card) return;
@@ -120,18 +122,27 @@ class Catalog {
 
             if (e.target.closest('.product-card__fav-btn')) return;
 
+            var now = Date.now();
+            if (lastCartAction[productId] && now - lastCartAction[productId] < 300) return;
+
             if (e.target.closest('[data-action="increase"]')) {
+                e.preventDefault();
                 e.stopPropagation();
+                lastCartAction[productId] = now;
                 self.addToCart(productId);
                 return;
             }
             if (e.target.closest('[data-action="decrease"]')) {
+                e.preventDefault();
                 e.stopPropagation();
+                lastCartAction[productId] = now;
                 self.removeFromCart(productId);
                 return;
             }
             if (e.target.closest('.product-card__add-btn')) {
+                e.preventDefault();
                 e.stopPropagation();
+                lastCartAction[productId] = now;
                 self.addToCart(productId);
                 return;
             }
