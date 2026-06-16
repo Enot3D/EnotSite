@@ -70,6 +70,7 @@ function initAuth() {
                             db.collection('users').doc(cred.user.uid).update({ role: 'admin' });
                         }
                         localStorage.setItem('enotspace_current_user', JSON.stringify(userData));
+                        syncFavoritesOnLogin(cred.user.uid);
                         closeAuth();
                         updateAuthUI();
                         if (wasAdmin) alert('Вы назначены администратором!');
@@ -156,6 +157,20 @@ function logout() {
         if (oldBtn) oldBtn.remove();
         updateAuthUI();
         navigate('catalog');
+    });
+}
+
+function syncFavoritesOnLogin(userId) {
+    var localFavs = JSON.parse(localStorage.getItem('enotspace_favorites') || '[]');
+    if (localFavs.length === 0) return;
+
+    firebaseGetFavorites(userId).then(function(firestoreFavs) {
+        var merged = (firestoreFavs || []).slice();
+        localFavs.forEach(function(id) {
+            if (merged.indexOf(id) === -1) merged.push(id);
+        });
+        firebaseSaveFavorites(userId, merged);
+        localStorage.removeItem('enotspace_favorites');
     });
 }
 
@@ -321,7 +336,7 @@ function renderOrders() {
             html += '<div class="order-card__hint">Нажмите для подробностей &rarr;</div>';
 
             if (project.status === 'completed') {
-                html += '<button class="order-card__repeat-btn" data-order="' + index + '">Заказать снова</button>';
+                html += '<button class="order-card__repeat-btn" data-order-id="' + project.id + '">Заказать снова</button>';
             }
 
             html += '</div>';
@@ -340,7 +355,7 @@ function renderOrders() {
         container.querySelectorAll('.order-card__repeat-btn').forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                repeatOrder(parseInt(btn.dataset.order));
+                repeatOrder(btn.dataset.orderId);
             });
         });
     });

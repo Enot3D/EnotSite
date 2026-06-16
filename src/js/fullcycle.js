@@ -112,12 +112,16 @@ function initFullcycle() {
     }
 
     function submitProject() {
+        var user = getCurrentUser();
         var projectData = {
-            id: 'PRJ-' + Date.now(), status: 'new', createdAt: new Date().toISOString(),
+            status: 'new',
+            type: 'fullcycle',
+            createdAt: new Date().toISOString(),
             photos: files.length,
             description: sanitizeInput(document.getElementById('project-desc').value, 2000),
             material: document.getElementById('project-material').value,
             urgency: document.getElementById('project-urgency').value,
+            userId: user ? user.id : null,
             contact: {
                 name: sanitizeInput(document.getElementById('contact-name').value, 100),
                 phone: sanitizeInput(document.getElementById('contact-phone').value, 20),
@@ -127,9 +131,9 @@ function initFullcycle() {
             messages: [],
             timeline: [{ status: 'new', date: new Date().toISOString(), text: 'Заявка создана' }]
         };
-        var existing = JSON.parse(localStorage.getItem('enotspace_projects') || '[]');
-        existing.push(projectData);
-        localStorage.setItem('enotspace_projects', JSON.stringify(existing));
+        db.collection('projects').add(projectData).catch(function(err) {
+            console.error('Ошибка сохранения проекта:', err);
+        });
     }
 
     function setupFAQ() {

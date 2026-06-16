@@ -1,22 +1,50 @@
 // === FAVORITES ===
 function getFavorites() {
-    return JSON.parse(localStorage.getItem('enotspace_favorites') || '[]');
+    var user = getCurrentUser();
+    if (user) {
+        return firebaseGetFavorites(user.id).then(function(favs) {
+            return favs || [];
+        }).catch(function() {
+            return JSON.parse(localStorage.getItem('enotspace_favorites') || '[]');
+        });
+    }
+    return Promise.resolve(JSON.parse(localStorage.getItem('enotspace_favorites') || '[]'));
 }
 
 function toggleFavorite(productId) {
-    var favs = getFavorites();
-    var idx = favs.indexOf(productId);
-    if (idx === -1) {
-        favs.push(productId);
-    } else {
-        favs.splice(idx, 1);
+    var user = getCurrentUser();
+    if (user) {
+        return firebaseGetFavorites(user.id).then(function(favs) {
+            var list = favs || [];
+            var idx = list.indexOf(productId);
+            if (idx === -1) {
+                list.push(productId);
+            } else {
+                list.splice(idx, 1);
+            }
+            firebaseSaveFavorites(user.id, list).catch(function() {});
+            localStorage.setItem('enotspace_favorites', JSON.stringify(list));
+            return idx === -1;
+        }).catch(function() {
+            var list = JSON.parse(localStorage.getItem('enotspace_favorites') || '[]');
+            var idx = list.indexOf(productId);
+            if (idx === -1) list.push(productId);
+            else list.splice(idx, 1);
+            localStorage.setItem('enotspace_favorites', JSON.stringify(list));
+            return idx === -1;
+        });
     }
-    localStorage.setItem('enotspace_favorites', JSON.stringify(favs));
-    return idx === -1;
+    var list = JSON.parse(localStorage.getItem('enotspace_favorites') || '[]');
+    var idx = list.indexOf(productId);
+    if (idx === -1) list.push(productId);
+    else list.splice(idx, 1);
+    localStorage.setItem('enotspace_favorites', JSON.stringify(list));
+    return Promise.resolve(idx === -1);
 }
 
 function isFavorite(productId) {
-    return getFavorites().indexOf(productId) !== -1;
+    var list = JSON.parse(localStorage.getItem('enotspace_favorites') || '[]');
+    return list.indexOf(productId) !== -1;
 }
 
 function renderFavoriteButtons() {
@@ -34,9 +62,10 @@ function renderFavoriteButtons() {
         btn.innerHTML = isFavorite(id) ? '&#9829;' : '&#9825;';
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
-            var added = toggleFavorite(id);
-            btn.classList.toggle('active', added);
-            btn.innerHTML = added ? '&#9829;' : '&#9825;';
+            toggleFavorite(id).then(function(added) {
+                btn.classList.toggle('active', added);
+                btn.innerHTML = added ? '&#9829;' : '&#9825;';
+            });
         });
         imgEl.appendChild(btn);
     });
@@ -44,17 +73,12 @@ function renderFavoriteButtons() {
 
 // === PROMO CODES ===
 function getPromoCodes() {
-    var saved = localStorage.getItem('enotspace_promos');
-    if (saved) return JSON.parse(saved);
-    return [];
+    return firebaseGetAllPromos().catch(function() {
+        return [];
+    });
 }
 
-function savePromoCodes(promos) {
-    localStorage.setItem('enotspace_promos', JSON.stringify(promos));
-}
-
-function applyPromo(code, subtotal) {
-    var promos = getPromoCodes();
+function applyPromo(code, subtotal, promos) {
     var promo = promos.find(function(p) { return p.code.toUpperCase() === code.toUpperCase(); });
     if (!promo) return { valid: false, error: 'Промокод не найден' };
     if (promo.active === false) return { valid: false, error: 'Промокод деактивирован' };
@@ -68,16 +92,17 @@ function applyPromo(code, subtotal) {
         discount = Math.min(promo.discount, subtotal);
     }
 
-    promo.used = (promo.used || 0) + 1;
-    savePromoCodes(promos);
+    var newUsed = (promo.used || 0) + 1;
+    firebaseUpdatePromo(promo.id, { used: newUsed });
 
     return { valid: true, discount: discount, description: promo.description || promo.code };
 }
 
 function renderAdminPromos() {
-    var promos = getPromoCodes();
     var container = document.getElementById('tab-admin-promos');
     if (!container) return;
+
+    firebaseGetAllPromos().then(function(promos) {
 
     var html = '<div class="admin-promos">';
     html += '<div class="admin-promos__header">';
@@ -107,9 +132,9 @@ function renderAdminPromos() {
             if (p.expiresAt) html += '<span class="admin-promo__expires">До: ' + escapeHtml(new Date(p.expiresAt).toLocaleDateString('ru-RU')) + '</span>';
             html += '</div></div></div>';
             html += '<div class="admin-promo__actions">';
-            html += '<button class="admin-promo__toggle" data-index="' + i + '">' + (isActive ? 'Выкл' : 'Вкл') + '</button>';
-            html += '<button class="admin-promo__edit" data-index="' + i + '">✎</button>';
-            html += '<button class="admin-promo__delete" data-index="' + i + '">✕</button>';
+            html += '<button class="admin-promo__toggle" data-id="' + p.id + '">' + (isActive ? 'Выкл' : 'Вкл') + '</button>';
+            html += '<button class="admin-promo__edit" data-id="' + p.id + '">✎</button>';
+            html += '<button class="admin-promo__delete" data-id="' + p.id + '">✕</button>';
             html += '</div>';
             html += '</div>';
         });
@@ -125,35 +150,39 @@ function renderAdminPromos() {
 
     container.querySelectorAll('.admin-promo__toggle').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            var idx = parseInt(btn.dataset.index);
-            var promos = getPromoCodes();
-            promos[idx].active = promos[idx].active === false ? true : false;
-            savePromoCodes(promos);
-            renderAdminPromos();
+            var id = btn.dataset.id;
+            var promo = promos.find(function(p) { return p.id === id; });
+            if (promo) {
+                firebaseUpdatePromo(id, { active: promo.active === false ? true : false });
+                renderAdminPromos();
+            }
         });
     });
 
     container.querySelectorAll('.admin-promo__edit').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            var idx = parseInt(btn.dataset.index);
-            var promos = getPromoCodes();
-            openPromoEditor(promos[idx], idx);
+            var id = btn.dataset.id;
+            var promo = promos.find(function(p) { return p.id === id; });
+            if (promo) openPromoEditor(promo);
         });
     });
 
     container.querySelectorAll('.admin-promo__delete').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            var idx = parseInt(btn.dataset.index);
+            var id = btn.dataset.id;
             if (!confirm('Удалить промокод?')) return;
-            var promos = getPromoCodes();
-            promos.splice(idx, 1);
-            savePromoCodes(promos);
-            renderAdminPromos();
+            firebaseDeletePromo(id).then(function() {
+                renderAdminPromos();
+            });
         });
+    });
+
+    }).catch(function() {
+        container.innerHTML = '<div class="admin-promos__empty">Ошибка загрузки промокодов</div>';
     });
 }
 
-function openPromoEditor(promo, editIndex) {
+function openPromoEditor(promo) {
     var isNew = !promo;
 
     var html = '<div class="admin-modal" id="promo-editor-modal">';
@@ -211,7 +240,6 @@ function openPromoEditor(promo, editIndex) {
         if (!code || !discount) { alert('Заполните код и размер скидки'); return; }
         if (maxUses < 0) { alert('Макс. использований не может быть отрицательным'); return; }
 
-        var promos = getPromoCodes();
         var promoData = {
             code: code,
             type: type,
@@ -223,19 +251,18 @@ function openPromoEditor(promo, editIndex) {
             active: promo ? promo.active !== false : true
         };
 
+        var savePromise;
         if (isNew) {
-            if (promos.some(function(p) { return p.code === code; })) {
-                alert('Промокод с таким кодом уже существует');
-                return;
-            }
-            promos.push(promoData);
+            promoData.createdAt = new Date().toISOString();
+            savePromise = firebaseSavePromo(code, promoData);
         } else {
-            promos[editIndex] = promoData;
+            savePromise = firebaseUpdatePromo(promo.id, promoData);
         }
 
-        savePromoCodes(promos);
-        closePromoEditor();
-        renderAdminPromos();
+        savePromise.then(function() {
+            closePromoEditor();
+            renderAdminPromos();
+        });
     });
 
     function closePromoEditor() {
@@ -274,24 +301,34 @@ function setupPromoCode() {
         }
 
         var cart = JSON.parse(localStorage.getItem('enotspace_cart') || '[]');
-        var products = typeof PRODUCTS !== 'undefined' ? PRODUCTS : [];
-        var subtotal = 0;
-        cart.forEach(function(item) {
-            var p = products.find(function(pr) { return pr.id === item.productId; });
-            if (p) subtotal += p.price * item.quantity;
-        });
 
-        var result = applyPromo(code, subtotal);
-        if (result.valid) {
-            resultEl.textContent = result.description + ': -' + result.discount.toLocaleString('ru-RU') + ' ₽';
-            resultEl.className = 'cart-promo__result success';
-            localStorage.setItem('enotspace_promo_applied', JSON.stringify({ code: code, discount: result.discount }));
-            recalcCartSummary();
-        } else {
-            resultEl.textContent = result.error;
-            resultEl.className = 'cart-promo__result error';
-            localStorage.removeItem('enotspace_promo_applied');
-        }
+        db.collection('products').get().then(function(snapshot) {
+            var products = [];
+            snapshot.forEach(function(doc) {
+                products.push(Object.assign({ id: parseInt(doc.id) }, doc.data()));
+            });
+            if (products.length === 0) products = PRODUCTS;
+
+            var subtotal = 0;
+            cart.forEach(function(item) {
+                var p = products.find(function(pr) { return pr.id === item.productId; });
+                if (p) subtotal += p.price * item.quantity;
+            });
+
+            return firebaseGetAllPromos().then(function(promos) {
+                var result = applyPromo(code, subtotal, promos);
+                if (result.valid) {
+                    resultEl.textContent = result.description + ': -' + result.discount.toLocaleString('ru-RU') + ' ₽';
+                    resultEl.className = 'cart-promo__result success';
+                    localStorage.setItem('enotspace_promo_applied', JSON.stringify({ code: code, discount: result.discount }));
+                    recalcCartSummary();
+                } else {
+                    resultEl.textContent = result.error;
+                    resultEl.className = 'cart-promo__result error';
+                    localStorage.removeItem('enotspace_promo_applied');
+                }
+            });
+        });
     });
 }
 
@@ -320,44 +357,51 @@ function recalcCartSummary() {
 
 // === REVIEWS ===
 function getPurchasedProducts() {
-    return JSON.parse(localStorage.getItem('enotspace_purchased') || '[]');
+    var user = getCurrentUser();
+    if (!user) return [];
+    return firebaseGetPurchased(user.id).catch(function() {
+        return JSON.parse(localStorage.getItem('enotspace_purchased') || '[]');
+    });
 }
 
 function recordPurchase(productIds) {
     var user = getCurrentUser();
     if (!user) return;
-    var purchased = getPurchasedProducts();
-    productIds.forEach(function(id) {
-        if (purchased.indexOf(id) === -1) purchased.push(id);
+    firebaseGetPurchased(user.id).then(function(purchased) {
+        var updated = purchased || [];
+        productIds.forEach(function(id) {
+            if (updated.indexOf(id) === -1) updated.push(id);
+        });
+        firebaseSavePurchased(user.id, updated);
+    }).catch(function() {
+        var purchased = JSON.parse(localStorage.getItem('enotspace_purchased') || '[]');
+        productIds.forEach(function(id) {
+            if (purchased.indexOf(id) === -1) purchased.push(id);
+        });
+        localStorage.setItem('enotspace_purchased', JSON.stringify(purchased));
     });
-    localStorage.setItem('enotspace_purchased', JSON.stringify(purchased));
 }
 
 function hasPurchased(productId) {
-    return getPurchasedProducts().indexOf(productId) !== -1;
+    return getPurchasedProducts().then(function(purchased) {
+        return purchased.indexOf(productId) !== -1;
+    }).catch(function() {
+        return JSON.parse(localStorage.getItem('enotspace_purchased') || '[]').indexOf(productId) !== -1;
+    });
 }
 
 function getReviews() {
-    var saved = localStorage.getItem('enotspace_reviews');
-    if (saved) return JSON.parse(saved);
-    return [];
-}
-
-function saveReviews(reviews) {
-    localStorage.setItem('enotspace_reviews', JSON.stringify(reviews));
-}
-
-function getProductReviews(productId) {
-    return getReviews().filter(function(r) { return r.productId === productId; });
+    return firebaseGetAllReviews().catch(function() {
+        var saved = localStorage.getItem('enotspace_reviews');
+        return saved ? JSON.parse(saved) : [];
+    });
 }
 
 function addReview(productId, rating, text) {
     var user = getCurrentUser();
     if (!user) return false;
 
-    var reviews = getReviews();
     var newReview = {
-        id: 'rev-' + Date.now(),
         productId: productId,
         userId: user.id,
         userName: user.name,
@@ -365,65 +409,102 @@ function addReview(productId, rating, text) {
         text: sanitizeInput(text, 1000),
         date: new Date().toISOString()
     };
-    reviews.push(newReview);
-    saveReviews(reviews);
+
+    var reviewId = 'rev-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+    firebaseSaveReview(reviewId, newReview).catch(function() {
+        var reviews = JSON.parse(localStorage.getItem('enotspace_reviews') || '[]');
+        newReview.id = reviewId;
+        reviews.push(newReview);
+        localStorage.setItem('enotspace_reviews', JSON.stringify(reviews));
+    });
+
     return true;
 }
 
 function renderProductReviews(productId) {
-    var reviews = getProductReviews(productId);
-    var user = getCurrentUser();
-    var hasReviewed = user && reviews.some(function(r) { return r.userId === user.id; });
-
     var html = '<div class="product-reviews">';
+    html += '<div class="product-reviews__header">';
+    html += '<h3 class="product-reviews__title">Отзывы</h3>';
+    html += '</div>';
+    html += '<div class="product-reviews__list" id="product-reviews-list-' + productId + '">';
+    html += '<p style="color:var(--text-muted);">Загрузка отзывов...</p>';
+    html += '</div>';
+    html += '</div>';
+
+    setTimeout(function() {
+        loadProductReviews(productId);
+    }, 50);
+
+    return html;
+}
+
+function loadProductReviews(productId) {
+    var listEl = document.getElementById('product-reviews-list-' + productId);
+    if (!listEl) return;
+
+    var user = getCurrentUser();
+
+    firebaseGetReviewsByProduct(productId).then(function(reviews) {
+        renderProductReviewsList(listEl, reviews, productId, user);
+    }).catch(function() {
+        var reviews = JSON.parse(localStorage.getItem('enotspace_reviews') || '[]')
+            .filter(function(r) { return r.productId === productId; });
+        renderProductReviewsList(listEl, reviews, productId, user);
+    });
+}
+
+function renderProductReviewsList(listEl, reviews, productId, user) {
+    var hasReviewed = user && reviews.some(function(r) { return r.userId === user.id; });
 
     var avgRating = 0;
     if (reviews.length) {
         avgRating = reviews.reduce(function(s, r) { return s + r.rating; }, 0) / reviews.length;
     }
 
-    html += '<div class="product-reviews__header">';
-    html += '<h3 class="product-reviews__title">Отзывы (' + reviews.length + ')</h3>';
+    var headerEl = listEl.closest('.product-reviews').querySelector('.product-reviews__header');
     if (reviews.length) {
-        html += '<div class="product-reviews__avg">';
-        html += '<span class="product-reviews__avg-stars">' + renderStars(avgRating) + '</span>';
-        html += '<span class="product-reviews__avg-number">' + avgRating.toFixed(1) + '</span>';
-        html += '</div>';
+        headerEl.innerHTML = '<h3 class="product-reviews__title">Отзывы (' + reviews.length + ')</h3>' +
+            '<div class="product-reviews__avg">' +
+            '<span class="product-reviews__avg-stars">' + renderStars(avgRating) + '</span>' +
+            '<span class="product-reviews__avg-number">' + avgRating.toFixed(1) + '</span>' +
+            '</div>';
+    } else {
+        headerEl.innerHTML = '<h3 class="product-reviews__title">Отзывы (0)</h3>';
     }
-    html += '</div>';
 
-    if (user && !hasReviewed && hasPurchased(productId)) {
-        html += '<div class="product-reviews__form">';
-        html += '<div class="product-reviews__rating-select" id="review-rating-select">';
+    var formHtml = '';
+    if (user && !hasReviewed) {
+        formHtml = '<div class="product-reviews__form">' +
+            '<div class="product-reviews__rating-select" id="review-rating-select">';
         for (var i = 1; i <= 5; i++) {
-            html += '<span class="product-reviews__star" data-rating="' + i + '">&#9734;</span>';
+            formHtml += '<span class="product-reviews__star" data-rating="' + i + '">&#9734;</span>';
         }
-        html += '</div>';
-        html += '<textarea class="product-reviews__textarea" id="review-text" rows="3" placeholder="Напишите ваш отзыв..."></textarea>';
-        html += '<button class="product-reviews__submit" id="review-submit">Оставить отзыв</button>';
-        html += '</div>';
-    } else if (user && !hasReviewed && !hasPurchased(productId)) {
-        html += '<p class="product-reviews__login-hint">Купить товар, чтобы оставить отзыв</p>';
+        formHtml += '</div>' +
+            '<textarea class="product-reviews__textarea" id="review-text" rows="3" placeholder="Напишите ваш отзыв..."></textarea>' +
+            '<button class="product-reviews__submit" id="review-submit">Оставить отзыв</button>' +
+            '</div>';
     } else if (!user) {
-        html += '<p class="product-reviews__login-hint">Войдите, чтобы оставить отзыв</p>';
+        formHtml = '<p class="product-reviews__login-hint">Войдите, чтобы оставить отзыв</p>';
     }
 
-    html += '<div class="product-reviews__list">';
+    var listHtml = '';
     reviews.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
     reviews.forEach(function(r) {
-        html += '<div class="product-reviews__item">';
-        html += '<div class="product-reviews__item-header">';
-        html += '<span class="product-reviews__author">' + escapeHtml(r.userName) + '</span>';
-        html += '<span class="product-reviews__item-stars">' + renderStars(r.rating) + '</span>';
-        html += '<span class="product-reviews__date">' + escapeHtml(new Date(r.date).toLocaleDateString('ru-RU')) + '</span>';
-        html += '</div>';
-        html += '<p class="product-reviews__text">' + escapeHtml(r.text) + '</p>';
-        html += '</div>';
+        listHtml += '<div class="product-reviews__item">';
+        listHtml += '<div class="product-reviews__item-header">';
+        listHtml += '<span class="product-reviews__author">' + escapeHtml(r.userName) + '</span>';
+        listHtml += '<span class="product-reviews__item-stars">' + renderStars(r.rating) + '</span>';
+        listHtml += '<span class="product-reviews__date">' + escapeHtml(new Date(r.date).toLocaleDateString('ru-RU')) + '</span>';
+        listHtml += '</div>';
+        listHtml += '<p class="product-reviews__text">' + escapeHtml(r.text) + '</p>';
+        listHtml += '</div>';
     });
-    html += '</div>';
-    html += '</div>';
 
-    return html;
+    listEl.innerHTML = formHtml + (reviews.length === 0 && !user ? '' : listHtml);
+
+    if (user && !hasReviewed) {
+        setupReviewForm(productId);
+    }
 }
 
 function renderStars(rating) {
@@ -437,7 +518,7 @@ function renderStars(rating) {
     return html;
 }
 
-function setupReviewForm() {
+function setupReviewForm(productId) {
     var submitBtn = document.getElementById('review-submit');
     if (!submitBtn) return;
 
@@ -459,90 +540,124 @@ function setupReviewForm() {
         if (!selectedRating) { alert('Выберите оценку'); return; }
         if (!text) { alert('Напишите отзыв'); return; }
 
-        var modal = document.getElementById('product-modal');
-        var productId = parseInt(modal.dataset.productId);
-
         if (addReview(productId, selectedRating, text)) {
-            var reviewsContainer = modal.querySelector('.product-reviews');
-            if (reviewsContainer) {
-                reviewsContainer.outerHTML = renderProductReviews(productId);
-                setupReviewForm();
-            }
+            loadProductReviews(productId);
             alert('Спасибо за отзыв!');
         }
     });
 }
 
 // === REPEAT ORDER ===
-function repeatOrder(orderIndex) {
-    var projects = JSON.parse(localStorage.getItem('enotspace_projects') || '[]');
-    var project = projects[orderIndex];
-    if (!project) return;
+function repeatOrder(orderId) {
+    if (!orderId) return;
 
-    var products = typeof loadProducts === 'function' ? loadProducts() : PRODUCTS;
-    var cart = JSON.parse(localStorage.getItem('enotspace_cart') || '[]');
+    db.collection('projects').doc(orderId).get().then(function(doc) {
+        if (!doc.exists) return;
+        var project = doc.data();
 
-    if (project.file) {
-        alert('Заказ содержит 3D-файл "' + project.file + '". Для повтора перейдите на страницу "3D-печать по модели".');
-        return;
-    }
+        if (project.file) {
+            alert('Заказ содержит 3D-файл "' + project.file + '". Для повтора перейдите на страницу "3D-печать по модели".');
+            return;
+        }
 
-    if (project.type === 'fullcycle') {
-        navigate('fullcycle');
-        return;
-    }
+        if (project.type === 'fullcycle') {
+            navigate('fullcycle');
+            return;
+        }
 
-    if (project.type === 'modeling' || project.type === 'scanning') {
-        navigate(project.type);
-        return;
-    }
+        if (project.type === 'modeling' || project.type === 'scanning') {
+            navigate(project.type);
+            return;
+        }
 
-    alert('Заказ добавлен! Оформите его в корзине.');
-    navigate('cart');
+        if (project.type === 'print') {
+            navigate('print');
+            return;
+        }
+
+        if (project.items && project.items.length) {
+            var cart = JSON.parse(localStorage.getItem('enotspace_cart') || '[]');
+            project.items.forEach(function(item) {
+                var existing = cart.find(function(c) { return c.productId === item.productId; });
+                if (existing) {
+                    existing.quantity += item.quantity;
+                } else {
+                    cart.push({ productId: item.productId, quantity: item.quantity });
+                }
+            });
+            localStorage.setItem('enotspace_cart', JSON.stringify(cart));
+            updateCartCount();
+            alert('Товары добавлены в корзину!');
+            navigate('cart');
+        }
+    });
 }
 
 // === FAVORITES PAGE ===
 function renderFavoritesPage() {
-    var favIds = getFavorites();
-    var products = typeof loadProducts === 'function' ? loadProducts() : PRODUCTS;
-    var favProducts = products.filter(function(p) { return favIds.indexOf(p.id) !== -1; });
-
     var html = '<section class="catalog">';
     html += '<div class="catalog__header"><h1 class="catalog__title">Избранное</h1></div>';
-
-    if (favProducts.length === 0) {
-        html += '<div class="cart-empty" style="display:block;">';
-        html += '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
-        html += '<h2>Избранное пусто</h2>';
-        html += '<p>Добавляйте товары, нажимая на сердечко</p>';
-        html += '<button class="cart-empty__btn" onclick="navigate(\'catalog\')">Перейти в каталог</button>';
-        html += '</div>';
-    } else {
-        html += '<div class="catalog__grid" id="products-grid">';
-        favProducts.forEach(function(product) {
-            var firstImage = product.colors[0].images[0];
-            html += '<div class="product-card" data-id="' + product.id + '">';
-            html += '<div class="product-card__image"><img src="' + firstImage + '" alt="' + escapeAttr(product.name) + '" loading="lazy">';
-            html += '<button class="product-card__fav-btn active" data-id="' + product.id + '">&#9829;</button>';
-            if (!product.inStock) html += '<span class="product-card__badge">Нет в наличии</span>';
-            html += '</div>';
-            html += '<div class="product-card__body">';
-            html += '<h3 class="product-card__title">' + escapeHtml(product.name) + '</h3>';
-            html += '<p class="product-card__description">' + escapeHtml(product.description) + '</p>';
-            html += '<div class="product-card__footer">';
-            html += '<div class="product-card__price">' + product.price.toLocaleString('ru-RU') + ' <span>&#8381;</span></div>';
-            html += '<div class="product-card__cart-wrap">';
-            html += '<button class="product-card__add-btn">В корзину</button>';
-            html += '<div class="product-card__cart-counter">';
-            html += '<button class="product-card__cart-btn" data-action="decrease">&minus;</button>';
-            html += '<span class="product-card__cart-quantity"></span>';
-            html += '<button class="product-card__cart-btn" data-action="increase">+</button>';
-            html += '</div></div></div></div></div>';
-        });
-        html += '</div>';
-    }
-
+    html += '<div class="catalog__grid" id="products-grid"></div>';
     html += '</section>';
+
+    setTimeout(function() {
+        getFavorites().then(function(favIds) {
+            var grid = document.getElementById('products-grid');
+            if (!grid) return;
+
+            if (favIds.length === 0) {
+                grid.parentElement.innerHTML = '<div class="catalog__header"><h1 class="catalog__title">Избранное</h1></div>' +
+                    '<div class="cart-empty" style="display:block;">' +
+                    '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
+                    '<h2>Избранное пусто</h2>' +
+                    '<p>Добавляйте товары, нажимая на сердечко</p>' +
+                    '<button class="cart-empty__btn" onclick="navigate(\'catalog\')">Перейти в каталог</button>' +
+                    '</div>';
+                return;
+            }
+
+            loadProducts().then(function(products) {
+                var favProducts = products.filter(function(p) { return favIds.indexOf(p.id) !== -1; });
+                grid.innerHTML = favProducts.map(function(product) {
+                    var firstImage = product.colors && product.colors[0] ? product.colors[0].images[0] : '';
+                    return '<div class="product-card" data-id="' + product.id + '">' +
+                        '<div class="product-card__image"><img src="' + firstImage + '" alt="' + escapeAttr(product.name) + '" loading="lazy">' +
+                        '<button class="product-card__fav-btn active" data-id="' + product.id + '">&#9829;</button>' +
+                        (!product.inStock ? '<span class="product-card__badge">Нет в наличии</span>' : '') +
+                        '</div>' +
+                        '<div class="product-card__body">' +
+                        '<h3 class="product-card__title">' + escapeHtml(product.name) + '</h3>' +
+                        '<p class="product-card__description">' + escapeHtml(product.description) + '</p>' +
+                        '<div class="product-card__footer">' +
+                        '<div class="product-card__price">' + product.price.toLocaleString('ru-RU') + ' <span>&#8381;</span></div>' +
+                        '<div class="product-card__cart-wrap">' +
+                        '<button class="product-card__add-btn">В корзину</button>' +
+                        '<div class="product-card__cart-counter">' +
+                        '<button class="product-card__cart-btn" data-action="decrease">&minus;</button>' +
+                        '<span class="product-card__cart-quantity"></span>' +
+                        '<button class="product-card__cart-btn" data-action="increase">+</button>' +
+                        '</div></div></div></div></div>';
+                }).join('');
+
+                renderFavoriteButtons();
+                grid.querySelectorAll('.product-card__fav-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        var id = parseInt(btn.dataset.id);
+                        toggleFavorite(id).then(function(added) {
+                            if (!added) {
+                                navigate('favorites');
+                            } else {
+                                btn.classList.add('active');
+                                btn.innerHTML = '&#9829;';
+                            }
+                        });
+                    });
+                });
+            });
+        });
+    }, 50);
+
     return html;
 }
 
@@ -745,36 +860,36 @@ function initAboutPage() {
 
 // === REVIEWS PAGE ===
 function initReviewsPage() {
-    var reviews = getReviews();
-    var products = typeof loadProducts === 'function' ? loadProducts() : PRODUCTS;
+    loadProducts().then(function(products) {
+        getReviews().then(function(reviews) {
+            var avgRating = reviews.length ? (reviews.reduce(function(s, r) { return s + r.rating; }, 0) / reviews.length) : 0;
+            var stars5 = reviews.filter(function(r) { return r.rating === 5; }).length;
+            var stars4 = reviews.filter(function(r) { return r.rating === 4; }).length;
+            var stars3 = reviews.filter(function(r) { return r.rating === 3; }).length;
 
-    var avgRating = reviews.length ? (reviews.reduce(function(s, r) { return s + r.rating; }, 0) / reviews.length) : 0;
-    var stars5 = reviews.filter(function(r) { return r.rating === 5; }).length;
-    var stars4 = reviews.filter(function(r) { return r.rating === 4; }).length;
-    var stars3 = reviews.filter(function(r) { return r.rating === 3; }).length;
+            var statsHtml = '<div class="reviews-stats__overall">';
+            statsHtml += '<div class="reviews-stats__number">' + avgRating.toFixed(1) + '</div>';
+            statsHtml += '<div class="reviews-stats__stars">' + renderStars(avgRating) + '</div>';
+            statsHtml += '<div class="reviews-stats__count">' + reviews.length + ' отзывов</div>';
+            statsHtml += '</div>';
+            statsHtml += '<div class="reviews-stats__bars">';
+            statsHtml += '<div class="reviews-stats__bar"><span>5 ★</span><div class="reviews-stats__bar-track"><div class="reviews-stats__bar-fill" style="width:' + (reviews.length ? Math.round(stars5 / reviews.length * 100) : 0) + '%"></div></div><span>' + stars5 + '</span></div>';
+            statsHtml += '<div class="reviews-stats__bar"><span>4 ★</span><div class="reviews-stats__bar-track"><div class="reviews-stats__bar-fill" style="width:' + (reviews.length ? Math.round(stars4 / reviews.length * 100) : 0) + '%"></div></div><span>' + stars4 + '</span></div>';
+            statsHtml += '<div class="reviews-stats__bar"><span>3 ★</span><div class="reviews-stats__bar-track"><div class="reviews-stats__bar-fill" style="width:' + (reviews.length ? Math.round(stars3 / reviews.length * 100) : 0) + '%"></div></div><span>' + stars3 + '</span></div>';
+            statsHtml += '</div>';
 
-    var statsHtml = '<div class="reviews-stats__overall">';
-    statsHtml += '<div class="reviews-stats__number">' + avgRating.toFixed(1) + '</div>';
-    statsHtml += '<div class="reviews-stats__stars">' + renderStars(avgRating) + '</div>';
-    statsHtml += '<div class="reviews-stats__count">' + reviews.length + ' отзывов</div>';
-    statsHtml += '</div>';
-    statsHtml += '<div class="reviews-stats__bars">';
-    statsHtml += '<div class="reviews-stats__bar"><span>5 ★</span><div class="reviews-stats__bar-track"><div class="reviews-stats__bar-fill" style="width:' + (reviews.length ? Math.round(stars5 / reviews.length * 100) : 0) + '%"></div></div><span>' + stars5 + '</span></div>';
-    statsHtml += '<div class="reviews-stats__bar"><span>4 ★</span><div class="reviews-stats__bar-track"><div class="reviews-stats__bar-fill" style="width:' + (reviews.length ? Math.round(stars4 / reviews.length * 100) : 0) + '%"></div></div><span>' + stars4 + '</span></div>';
-    statsHtml += '<div class="reviews-stats__bar"><span>3 ★</span><div class="reviews-stats__bar-track"><div class="reviews-stats__bar-fill" style="width:' + (reviews.length ? Math.round(stars3 / reviews.length * 100) : 0) + '%"></div></div><span>' + stars3 + '</span></div>';
-    statsHtml += '</div>';
+            document.getElementById('reviews-stats').innerHTML = statsHtml;
+            renderReviewsList(reviews, products);
 
-    document.getElementById('reviews-stats').innerHTML = statsHtml;
-
-    renderReviewsList(reviews, products);
-
-    document.querySelectorAll('.reviews-filter').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.reviews-filter').forEach(function(b) { b.classList.remove('active'); });
-            btn.classList.add('active');
-            var rating = btn.dataset.rating;
-            var filtered = rating === 'all' ? reviews : reviews.filter(function(r) { return r.rating === parseInt(rating); });
-            renderReviewsList(filtered, products);
+            document.querySelectorAll('.reviews-filter').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.reviews-filter').forEach(function(b) { b.classList.remove('active'); });
+                    btn.classList.add('active');
+                    var rating = btn.dataset.rating;
+                    var filtered = rating === 'all' ? reviews : reviews.filter(function(r) { return r.rating === parseInt(rating); });
+                    renderReviewsList(filtered, products);
+                });
+            });
         });
     });
 }

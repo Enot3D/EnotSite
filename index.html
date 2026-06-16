@@ -101,22 +101,6 @@
                 document.getElementById('main-placeholder').innerHTML = renderFavoritesPage();
                 updateActiveLink(page);
                 window.scrollTo(0, 0);
-                setTimeout(function() {
-                    renderFavoriteButtons();
-                    document.querySelectorAll('.product-card__fav-btn').forEach(function(btn) {
-                        btn.addEventListener('click', function(e) {
-                            e.stopPropagation();
-                            var id = parseInt(btn.dataset.id);
-                            var added = toggleFavorite(id);
-                            if (!added) {
-                                navigate('favorites');
-                            } else {
-                                btn.classList.add('active');
-                                btn.innerHTML = '&#9829;';
-                            }
-                        });
-                    });
-                }, 100);
                 return;
             }
 

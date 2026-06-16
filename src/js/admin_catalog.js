@@ -188,7 +188,6 @@ function openProductEditor(product) {
             });
         }
 
-        var products = loadProducts();
         var productData = {
             id: product ? product.id : Date.now(),
             name: name,
@@ -202,16 +201,10 @@ function openProductEditor(product) {
             reviews: parseInt(document.getElementById('ed-reviews').value) || 0
         };
 
-        if (product) {
-            var idx = products.findIndex(function(p) { return p.id === product.id; });
-            if (idx !== -1) products[idx] = productData;
-        } else {
-            products.push(productData);
-        }
-
-        saveProduct(productData);
-        closeEditor();
-        if (typeof catalog !== 'undefined') catalog.reinit();
+        saveProduct(productData).then(function() {
+            closeEditor();
+            if (typeof catalog !== 'undefined') catalog.reinit();
+        });
     });
 
     function closeEditor() {

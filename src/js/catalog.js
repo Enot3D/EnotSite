@@ -211,9 +211,9 @@ class Catalog {
 
         var reviewsHtml = renderProductReviews(productId);
         var cartSection = modal.querySelector('.product-modal__cart');
-        if (cartSection && reviewsHtml) {
+        var existingReviews = modal.querySelector('.product-reviews');
+        if (cartSection && reviewsHtml && !existingReviews) {
             cartSection.insertAdjacentHTML('afterend', reviewsHtml);
-            setupReviewForm();
         }
     }
     

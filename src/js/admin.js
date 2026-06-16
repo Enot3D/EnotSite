@@ -91,8 +91,12 @@ function renderDashboard() {
         }
         html += '</div></div></div></div>';
 
-        if (typeof renderSalesChart === 'function') html += renderSalesChart();
         container.innerHTML = html;
+        if (typeof renderSalesChart === 'function') {
+            renderSalesChart().then(function(chartHtml) {
+                if (chartHtml) container.insertAdjacentHTML('beforeend', chartHtml);
+            });
+        }
     });
 }
 
@@ -300,4 +304,109 @@ function renderUsers() {
         html += '</div>';
         container.innerHTML = html;
     });
+}
+
+function renderAdminChat() {
+    var container = document.getElementById('tab-admin-chat');
+    if (!container) return;
+
+    db.collection('projects').orderBy('createdAt', 'desc').get().then(function(snapshot) {
+        var projects = [];
+        snapshot.forEach(function(doc) {
+            var data = doc.data();
+            if (data.messages && data.messages.length > 0) {
+                projects.push(Object.assign({ _docId: doc.id }, data));
+            }
+        });
+
+        var html = '<div class="admin-chat-list">';
+        html += '<h2 class="admin-chat-list__title">Чаты с клиентами</h2>';
+
+        if (projects.length === 0) {
+            html += '<p class="admin-chat-list__empty">Нет активных чатов</p>';
+        } else {
+            projects.forEach(function(p) {
+                var lastMsg = p.messages[p.messages.length - 1];
+                var clientName = p.contact ? p.contact.name : 'Клиент';
+                var msgPreview = lastMsg.text.substring(0, 80) + (lastMsg.text.length > 80 ? '...' : '');
+                var date = new Date(lastMsg.date).toLocaleString('ru-RU');
+
+                html += '<div class="admin-chat-item" data-order-id="' + p._docId + '">';
+                html += '<div class="admin-chat-item__header">';
+                html += '<span class="admin-chat-item__name">' + escapeHtml(clientName) + '</span>';
+                html += '<span class="admin-chat-item__date">' + escapeHtml(date) + '</span>';
+                html += '</div>';
+                html += '<div class="admin-chat-item__preview">' + escapeHtml(msgPreview) + '</div>';
+                html += '</div>';
+            });
+        }
+        html += '</div>';
+        html += '<div class="admin-chat-detail" id="admin-chat-detail" style="display:none;"></div>';
+
+        container.innerHTML = html;
+
+        container.querySelectorAll('.admin-chat-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var orderId = item.dataset.orderId;
+                var project = projects.find(function(p) { return p._docId === orderId; });
+                if (project) showAdminChatDetail(project);
+            });
+        });
+    }).catch(function() {
+        container.innerHTML = '<p class="admin-chat-list__empty">Ошибка загрузки чатов</p>';
+    });
+}
+
+function showAdminChatDetail(p) {
+    var list = document.querySelector('.admin-chat-list');
+    var detail = document.getElementById('admin-chat-detail');
+    if (!list || !detail) return;
+
+    list.style.display = 'none';
+    detail.style.display = 'block';
+
+    var clientName = p.contact ? p.contact.name : 'Клиент';
+
+    var html = '<button class="order-detail__back" id="admin-chat-back">&larr; Назад</button>';
+    html += '<div class="order-detail__card">';
+    html += '<h3>Чат с ' + escapeHtml(clientName) + '</h3>';
+    html += '<div class="order-detail__chat" id="admin-chat-messages">';
+    if (p.messages && p.messages.length) {
+        p.messages.forEach(function(msg) {
+            var isAdminMsg = msg.from === 'admin';
+            html += '<div class="chat-msg ' + (isAdminMsg ? 'chat-msg--admin' : 'chat-msg--user') + '">';
+            html += '<div class="chat-msg__text">' + escapeHtml(msg.text) + '</div>';
+            html += '<div class="chat-msg__date">' + escapeHtml(new Date(msg.date).toLocaleString('ru-RU')) + '</div>';
+            html += '</div>';
+        });
+    }
+    html += '</div>';
+    html += '<div class="order-detail__chat-input">';
+    html += '<input type="text" class="order-detail__chat-field" id="admin-chat-input" placeholder="Ответ клиенту...">';
+    html += '<button class="order-detail__chat-send" id="admin-chat-send">Отправить</button>';
+    html += '</div></div>';
+
+    detail.innerHTML = html;
+
+    document.getElementById('admin-chat-back').addEventListener('click', function() {
+        detail.style.display = 'none';
+        list.style.display = '';
+    });
+
+    var chatInput = document.getElementById('admin-chat-input');
+    var chatSend = document.getElementById('admin-chat-send');
+    if (chatSend && chatInput) {
+        chatSend.addEventListener('click', function() {
+            var text = sanitizeInput(chatInput.value, 500);
+            if (!text) return;
+            if (!p.messages) p.messages = [];
+            p.messages.push({ from: 'admin', text: text, date: new Date().toISOString() });
+            db.collection('projects').doc(p._docId || p.id).update({ messages: p.messages });
+            chatInput.value = '';
+            showAdminChatDetail(p);
+        });
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') chatSend.click();
+        });
+    }
 }

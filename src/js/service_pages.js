@@ -94,9 +94,11 @@ function setupServiceForm(type) {
                 timeline: [{ status: 'new', date: new Date().toISOString(), text: 'Заявка создана' }]
             };
 
-            var existing = JSON.parse(localStorage.getItem('enotspace_projects') || '[]');
-            existing.push(data);
-            localStorage.setItem('enotspace_projects', JSON.stringify(existing));
+            var user = getCurrentUser();
+            if (user) data.userId = user.id;
+            db.collection('projects').add(data).catch(function(err) {
+                console.error('Ошибка сохранения заявки:', err);
+            });
 
             var wrap = form.closest('.sp-form-wrap');
             wrap.innerHTML =

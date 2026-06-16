@@ -115,9 +115,11 @@ function initPrintOrder() {
             timeline: [{ status: 'new', date: new Date().toISOString(), text: 'Заявка на печать создана' }]
         };
 
-        var existing = JSON.parse(localStorage.getItem('enotspace_projects') || '[]');
-        existing.push(orderData);
-        localStorage.setItem('enotspace_projects', JSON.stringify(existing));
+        var user = getCurrentUser();
+        if (user) orderData.userId = user.id;
+        db.collection('projects').add(orderData).catch(function(err) {
+            console.error('Ошибка сохранения заказа печати:', err);
+        });
 
         document.querySelector('.print-order__form-wrap').innerHTML =
             '<div style="padding: 40px 0; text-align: center;">' +
