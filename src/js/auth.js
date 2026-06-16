@@ -176,24 +176,16 @@ function syncFavoritesOnLogin(userId) {
 
 function updateAuthUI() {
     var user = getCurrentUser();
-    var loginBtn = document.querySelector('.header__login-btn');
+    var loginBtn = document.getElementById('login-btn');
     if (!loginBtn) return;
 
     if (user) {
-        loginBtn.textContent = escapeHtml(user.name.charAt(0).toUpperCase());
-        loginBtn.style.borderRadius = '50%';
-        loginBtn.style.width = '40px';
-        loginBtn.style.height = '40px';
-        loginBtn.style.padding = '0';
-        loginBtn.style.fontSize = '16px';
+        loginBtn.innerHTML = escapeHtml(user.name.charAt(0).toUpperCase());
+        loginBtn.classList.add('logged-in');
         loginBtn.onclick = function() { navigate('account'); };
     } else {
-        loginBtn.textContent = 'Вход';
-        loginBtn.style.borderRadius = '10px';
-        loginBtn.style.width = '';
-        loginBtn.style.height = '';
-        loginBtn.style.padding = '10px 24px';
-        loginBtn.style.fontSize = '14px';
+        loginBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+        loginBtn.classList.remove('logged-in');
         loginBtn.onclick = function() { openAuth(); };
     }
 }

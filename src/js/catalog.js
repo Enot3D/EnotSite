@@ -23,6 +23,7 @@ class Catalog {
             this.syncCart(JSON.parse(localStorage.getItem('enotspace_cart') || '[]'));
             this.renderProducts();
             this.setupFilters();
+            this.setupSearch();
             this.setupModal();
         } else {
             catalogPollingId = setTimeout(() => this.waitForGrid(), 100);
@@ -51,9 +52,17 @@ class Catalog {
         const grid = document.getElementById('products-grid');
         if (!grid) return;
         
-        const filtered = this.currentFilter === 'all' 
+        var filtered = this.currentFilter === 'all' 
             ? this.products 
             : this.products.filter(p => p.category === this.currentFilter);
+
+        if (this.currentSearch) {
+            filtered = filtered.filter(p => 
+                p.name.toLowerCase().indexOf(this.currentSearch) !== -1 ||
+                (p.description && p.description.toLowerCase().indexOf(this.currentSearch) !== -1) ||
+                (p.material && p.material.toLowerCase().indexOf(this.currentSearch) !== -1)
+            );
+        }
         
         grid.innerHTML = filtered.map(product => this.createCard(product)).join('');
         this.setupCardEvents();
@@ -65,7 +74,7 @@ class Catalog {
         var localCart = JSON.parse(localStorage.getItem('enotspace_cart') || '[]');
         var existing = localCart.find(function(i) { return i.productId === product.id; });
         const inCart = existing ? existing.quantity : 0;
-        const firstImage = product.colors[0].images[0];
+        const firstImage = product.colors && product.colors[0] ? product.colors[0].images[0] : '';
         
         return `
             <div class="product-card" data-id="${product.id}">
@@ -75,7 +84,6 @@ class Catalog {
                 </div>
                 <div class="product-card__body">
                     <h3 class="product-card__title">${escapeHtml(product.name)}</h3>
-                    <p class="product-card__description">${escapeHtml(product.description)}</p>
                     <div class="product-card__footer">
                         <div class="product-card__price">
                             ${product.price.toLocaleString('ru-RU')} <span>₽</span>
@@ -141,8 +149,25 @@ class Catalog {
                 document.querySelectorAll('.catalog__filter').forEach(f => f.classList.remove('active'));
                 filter.classList.add('active');
                 this.currentFilter = filter.dataset.filter;
+                this.currentSearch = '';
+                var searchInput = document.getElementById('catalog-search');
+                if (searchInput) searchInput.value = '';
                 this.renderProducts();
             });
+        });
+    }
+
+    setupSearch() {
+        var self = this;
+        var searchInput = document.getElementById('catalog-search');
+        if (!searchInput) return;
+        var debounceTimer;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function() {
+                self.currentSearch = searchInput.value.trim().toLowerCase();
+                self.renderProducts();
+            }, 200);
         });
     }
     

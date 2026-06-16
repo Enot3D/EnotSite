@@ -57,7 +57,7 @@ PAGES.footer = `<footer class="site-footer">
 
 PAGES.catalog = `<section class="catalog">
     <div class="catalog__header">
-        <h1 class="catalog__title">Каталог товаров</h1>
+        <h1 class="catalog__title">Каталог</h1>
         <div class="catalog__filters" id="catalog-filters">
             <button class="catalog__filter active" data-filter="all">Все</button>
         </div>
@@ -80,22 +80,24 @@ PAGES.catalog = `<section class="catalog">
                     <span class="product-modal__reviews" id="modal-reviews"></span>
                 </div>
                 <p class="product-modal__description" id="modal-description"></p>
+                <div class="product-modal__price-row">
+                    <div class="product-modal__price" id="modal-price"></div>
+                    <div class="product-modal__cart">
+                        <div class="product-modal__cart-counter" id="modal-cart-counter" style="display: none;">
+                            <button class="product-modal__cart-btn" id="modal-decrease">−</button>
+                            <span class="product-modal__cart-quantity" id="modal-quantity">1</span>
+                            <button class="product-modal__cart-btn" id="modal-increase">+</button>
+                        </div>
+                        <button class="product-modal__add-btn" id="modal-add-to-cart">В корзину</button>
+                    </div>
+                </div>
+                <div class="product-modal__colors" id="modal-colors">
+                    <span class="product-modal__colors-label">Выбрать цвет:</span>
+                    <div class="product-modal__color-options" id="modal-color-options"></div>
+                </div>
                 <div class="product-modal__material">
                     <span class="product-modal__material-label">Материал:</span>
                     <span class="product-modal__material-value" id="modal-material"></span>
-                </div>
-                <div class="product-modal__colors" id="modal-colors">
-                    <span class="product-modal__colors-label">Цвет:</span>
-                    <div class="product-modal__color-options" id="modal-color-options"></div>
-                </div>
-                <div class="product-modal__price" id="modal-price"></div>
-                <div class="product-modal__cart">
-                    <div class="product-modal__cart-counter" id="modal-cart-counter" style="display: none;">
-                        <button class="product-modal__cart-btn" id="modal-decrease">−</button>
-                        <span class="product-modal__cart-quantity" id="modal-quantity">1</span>
-                        <button class="product-modal__cart-btn" id="modal-increase">+</button>
-                    </div>
-                    <button class="product-modal__add-btn" id="modal-add-to-cart">Добавить в корзину</button>
                 </div>
             </div>
         </div>
