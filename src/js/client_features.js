@@ -399,7 +399,7 @@ function getReviews() {
 
 function addReview(productId, rating, text) {
     var user = getCurrentUser();
-    if (!user) return false;
+    if (!user) return Promise.resolve(false);
 
     var newReview = {
         productId: productId,
@@ -411,14 +411,15 @@ function addReview(productId, rating, text) {
     };
 
     var reviewId = 'rev-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
-    firebaseSaveReview(reviewId, newReview).catch(function() {
+    return firebaseSaveReview(reviewId, newReview).then(function() {
+        return true;
+    }).catch(function() {
         var reviews = JSON.parse(localStorage.getItem('enotspace_reviews') || '[]');
         newReview.id = reviewId;
         reviews.push(newReview);
         localStorage.setItem('enotspace_reviews', JSON.stringify(reviews));
+        return true;
     });
-
-    return true;
 }
 
 function renderProductReviews(productId) {
@@ -544,10 +545,12 @@ function setupReviewForm(productId) {
         if (!selectedRating) { alert('Выберите оценку'); return; }
         if (!text) { alert('Напишите отзыв'); return; }
 
-        if (addReview(productId, selectedRating, text)) {
-            loadProductReviews(productId);
-            alert('Спасибо за отзыв!');
-        }
+        addReview(productId, selectedRating, text).then(function(success) {
+            if (success) {
+                loadProductReviews(productId);
+                alert('Спасибо за отзыв!');
+            }
+        });
     });
 }
 

@@ -57,6 +57,8 @@ class Catalog {
         
         grid.innerHTML = filtered.map(product => this.createCard(product)).join('');
         this.setupCardEvents();
+        if (typeof renderFavoriteButtons === 'function') renderFavoriteButtons();
+        if (typeof renderCatalogAdminControls === 'function') renderCatalogAdminControls();
     }
     
     createCard(product) {
