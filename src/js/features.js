@@ -9,9 +9,13 @@ function getTheme() {
     return getBrowserTheme();
 }
 
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+}
+
 function setTheme(theme) {
     localStorage.setItem('enotspace_theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
+    applyTheme(theme);
 }
 
 function toggleTheme() {
@@ -19,13 +23,18 @@ function toggleTheme() {
     setTheme(current === 'dark' ? 'light' : 'dark');
 }
 
+function resetTheme() {
+    localStorage.removeItem('enotspace_theme');
+    applyTheme(getBrowserTheme());
+}
+
 function initTheme() {
-    setTheme(getTheme());
+    applyTheme(getTheme());
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
         var saved = localStorage.getItem('enotspace_theme');
         if (!saved) {
-            setTheme(e.matches ? 'dark' : 'light');
+            applyTheme(e.matches ? 'dark' : 'light');
         }
     });
 }
