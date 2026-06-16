@@ -47,8 +47,19 @@ function saveCategories(cats) {
 }
 
 function loadServicePrices() {
+    var defaultPrices = {
+        modeling: { modeling: 'от 500 ₽', repair: 'от 300 ₽', deadline: '1-5 дней' },
+        scanning: { scanning: 'от 1 500 ₽', processing: 'от 500 ₽', accuracy: 'до 0.05 мм', deadline: '1-3 дня' },
+        print: { base: 'от 750 ₽', note: 'Рассчитывается индивидуально' },
+        fullcycle: { modeling: 'от 500 ₽', printing: 'от 750 ₽', total: 'от 1 250 ₽' }
+    };
     return db.collection('settings').doc('servicePrices').get().then(function(doc) {
-        return doc.exists ? doc.data() : {};
+        if (doc.exists && doc.data() && Object.keys(doc.data()).length > 0) {
+            return doc.data();
+        }
+        return db.collection('settings').doc('servicePrices').set(defaultPrices).then(function() {
+            return defaultPrices;
+        });
     });
 }
 

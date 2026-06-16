@@ -472,39 +472,43 @@ function renderProductReviewsList(listEl, reviews, productId, user) {
         headerEl.innerHTML = '<h3 class="product-reviews__title">Отзывы (0)</h3>';
     }
 
-    var formHtml = '';
-    if (user && !hasReviewed) {
-        formHtml = '<div class="product-reviews__form">' +
-            '<div class="product-reviews__rating-select" id="review-rating-select">';
-        for (var i = 1; i <= 5; i++) {
-            formHtml += '<span class="product-reviews__star" data-rating="' + i + '">&#9734;</span>';
+    hasPurchased(productId).then(function(purchased) {
+        var formHtml = '';
+        if (user && !hasReviewed && purchased) {
+            formHtml = '<div class="product-reviews__form">' +
+                '<div class="product-reviews__rating-select" id="review-rating-select">';
+            for (var i = 1; i <= 5; i++) {
+                formHtml += '<span class="product-reviews__star" data-rating="' + i + '">&#9734;</span>';
+            }
+            formHtml += '</div>' +
+                '<textarea class="product-reviews__textarea" id="review-text" rows="3" placeholder="Напишите ваш отзыв..."></textarea>' +
+                '<button class="product-reviews__submit" id="review-submit">Оставить отзыв</button>' +
+                '</div>';
+        } else if (user && !hasReviewed && !purchased) {
+            formHtml = '<p class="product-reviews__login-hint">Купите товар, чтобы оставить отзыв</p>';
+        } else if (!user) {
+            formHtml = '<p class="product-reviews__login-hint">Войдите, чтобы оставить отзыв</p>';
         }
-        formHtml += '</div>' +
-            '<textarea class="product-reviews__textarea" id="review-text" rows="3" placeholder="Напишите ваш отзыв..."></textarea>' +
-            '<button class="product-reviews__submit" id="review-submit">Оставить отзыв</button>' +
-            '</div>';
-    } else if (!user) {
-        formHtml = '<p class="product-reviews__login-hint">Войдите, чтобы оставить отзыв</p>';
-    }
 
-    var listHtml = '';
-    reviews.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
-    reviews.forEach(function(r) {
-        listHtml += '<div class="product-reviews__item">';
-        listHtml += '<div class="product-reviews__item-header">';
-        listHtml += '<span class="product-reviews__author">' + escapeHtml(r.userName) + '</span>';
-        listHtml += '<span class="product-reviews__item-stars">' + renderStars(r.rating) + '</span>';
-        listHtml += '<span class="product-reviews__date">' + escapeHtml(new Date(r.date).toLocaleDateString('ru-RU')) + '</span>';
-        listHtml += '</div>';
-        listHtml += '<p class="product-reviews__text">' + escapeHtml(r.text) + '</p>';
+        var listHtml = '';
+        reviews.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+        reviews.forEach(function(r) {
+            listHtml += '<div class="product-reviews__item">';
+            listHtml += '<div class="product-reviews__item-header">';
+            listHtml += '<span class="product-reviews__author">' + escapeHtml(r.userName) + '</span>';
+            listHtml += '<span class="product-reviews__item-stars">' + renderStars(r.rating) + '</span>';
+            listHtml += '<span class="product-reviews__date">' + escapeHtml(new Date(r.date).toLocaleDateString('ru-RU')) + '</span>';
+            listHtml += '</div>';
+            listHtml += '<p class="product-reviews__text">' + escapeHtml(r.text) + '</p>';
         listHtml += '</div>';
     });
 
-    listEl.innerHTML = formHtml + (reviews.length === 0 && !user ? '' : listHtml);
+        listEl.innerHTML = formHtml + (reviews.length === 0 && !user ? '' : listHtml);
 
-    if (user && !hasReviewed) {
-        setupReviewForm(productId);
-    }
+        if (user && !hasReviewed && purchased) {
+            setupReviewForm(productId);
+        }
+    });
 }
 
 function renderStars(rating) {
