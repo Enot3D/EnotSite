@@ -116,7 +116,12 @@ function initPrintOrder() {
         };
 
         var user = getCurrentUser();
-        if (user) orderData.userId = user.id;
+        if (!user) {
+            alert('Войдите в аккаунт, чтобы отслеживать заказ');
+            openAuth();
+            return;
+        }
+        orderData.userId = user.id;
         db.collection('projects').add(orderData).catch(function(err) {
             console.error('Ошибка сохранения заказа печати:', err);
         });

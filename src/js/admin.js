@@ -235,6 +235,15 @@ function showAdminOrderDetail(p) {
 
     if (p.description) html += '<div class="order-detail__section"><h3>Описание</h3><p>' + escapeHtml(p.description) + '</p></div>';
 
+    if (p.photos && Array.isArray(p.photos) && p.photos.length) {
+        html += '<div class="order-detail__section"><h3>Фото (' + p.photos.length + ')</h3>';
+        html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+        p.photos.forEach(function(photo) {
+            html += '<img src="' + photo + '" style="max-width:200px;max-height:200px;border-radius:8px;cursor:pointer;" onclick="window.open(this.src)">';
+        });
+        html += '</div></div>';
+    }
+
     if (p.contact) {
         html += '<div class="order-detail__section"><h3>Контакты клиента</h3><div class="order-detail__grid">';
         if (p.contact.name) html += '<div class="order-detail__field"><span>Имя</span><strong>' + escapeHtml(p.contact.name) + '</strong></div>';

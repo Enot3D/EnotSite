@@ -55,6 +55,30 @@ function initFullcycle() {
         });
     }
 
+    function resizeImage(file, maxWidth, quality) {
+        return new Promise(function(resolve) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = new Image();
+                img.onload = function() {
+                    var canvas = document.createElement('canvas');
+                    var w = img.width;
+                    var h = img.height;
+                    if (w > maxWidth) {
+                        h = Math.round(h * maxWidth / w);
+                        w = maxWidth;
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
     function nextStep() {
         if (!validateStep()) return;
         if (currentStep < totalSteps) {
@@ -113,26 +137,45 @@ function initFullcycle() {
 
     function submitProject() {
         var user = getCurrentUser();
-        var projectData = {
-            status: 'new',
-            type: 'fullcycle',
-            createdAt: new Date().toISOString(),
-            photos: files.length,
-            description: sanitizeInput(document.getElementById('project-desc').value, 2000),
-            material: document.getElementById('project-material').value,
-            urgency: document.getElementById('project-urgency').value,
-            userId: user ? user.id : null,
-            contact: {
-                name: sanitizeInput(document.getElementById('contact-name').value, 100),
-                phone: sanitizeInput(document.getElementById('contact-phone').value, 20),
-                telegram: sanitizeInput(document.getElementById('contact-telegram').value, 100),
-                email: sanitizeInput(document.getElementById('contact-email').value, 100)
-            },
-            messages: [],
-            timeline: [{ status: 'new', date: new Date().toISOString(), text: 'Заявка создана' }]
-        };
-        db.collection('projects').add(projectData).catch(function(err) {
+        if (!user) {
+            alert('Войдите в аккаунт, чтобы отслеживать заказ');
+            openAuth();
+            return;
+        }
+
+        var nextBtn = document.getElementById('btn-next');
+        nextBtn.textContent = 'Загрузка...';
+        nextBtn.disabled = true;
+
+        var resizePromises = files.map(function(f) {
+            return resizeImage(f, 800, 0.7);
+        });
+
+        Promise.all(resizePromises).then(function(photoDataUrls) {
+            var projectData = {
+                status: 'new',
+                type: 'fullcycle',
+                createdAt: new Date().toISOString(),
+                photos: photoDataUrls,
+                description: sanitizeInput(document.getElementById('project-desc').value, 2000),
+                material: document.getElementById('project-material').value,
+                urgency: document.getElementById('project-urgency').value,
+                userId: user ? user.id : null,
+                contact: {
+                    name: sanitizeInput(document.getElementById('contact-name').value, 100),
+                    phone: sanitizeInput(document.getElementById('contact-phone').value, 20),
+                    telegram: sanitizeInput(document.getElementById('contact-telegram').value, 100),
+                    email: sanitizeInput(document.getElementById('contact-email').value, 100)
+                },
+                messages: [],
+                timeline: [{ status: 'new', date: new Date().toISOString(), text: 'Заявка создана' }]
+            };
+            return db.collection('projects').add(projectData);
+        }).catch(function(err) {
             console.error('Ошибка сохранения проекта:', err);
+            alert('Ошибка отправки: ' + err.message);
+            nextBtn.textContent = 'Отправить';
+            nextBtn.disabled = false;
         });
     }
 

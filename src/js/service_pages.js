@@ -95,7 +95,12 @@ function setupServiceForm(type) {
             };
 
             var user = getCurrentUser();
-            if (user) data.userId = user.id;
+            if (!user) {
+                alert('Войдите в аккаунт, чтобы отслеживать заявку');
+                openAuth();
+                return;
+            }
+            data.userId = user.id;
             db.collection('projects').add(data).catch(function(err) {
                 console.error('Ошибка сохранения заявки:', err);
             });

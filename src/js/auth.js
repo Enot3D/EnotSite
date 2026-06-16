@@ -410,6 +410,15 @@ function showOrderDetail(index) {
             html += '<div class="order-detail__section"><h3>Описание</h3><p>' + escapeHtml(project.description) + '</p></div>';
         }
 
+        if (project.photos && Array.isArray(project.photos) && project.photos.length) {
+            html += '<div class="order-detail__section"><h3>Фото</h3>';
+            html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+            project.photos.forEach(function(photo) {
+                html += '<img src="' + photo + '" style="max-width:200px;max-height:200px;border-radius:8px;cursor:pointer;" onclick="window.open(this.src)">';
+            });
+            html += '</div></div>';
+        }
+
         if (project.contact) {
             html += '<div class="order-detail__section"><h3>Контакты</h3><div class="order-detail__grid">';
             if (project.contact.name) html += '<div class="order-detail__field"><span>Имя</span><strong>' + escapeHtml(project.contact.name) + '</strong></div>';
