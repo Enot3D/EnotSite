@@ -95,37 +95,6 @@
     width: 100%;
 }
 
-.header__search{
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #f5f5f5;
-    border-radius: 10px;
-    padding: 8px 16px;
-    flex: 1;
-    max-width: 320px;
-    transition: all 0.3s ease;
-}
-
-.header__search:focus-within{
-    background: #f0f0f0;
-    box-shadow: 0 0 0 2px rgba(249, 129, 48, 0.2);
-}
-
-.header__search-input{
-    border: none;
-    background: transparent;
-    outline: none;
-    font-size: 14px;
-    color: var(--text, #1a1a1a);
-    width: 100%;
-    font-family: 'Calibri', sans-serif;
-}
-
-.header__search-input::placeholder{
-    color: #aaa;
-}
-
 .header__actions{
     display: flex;
     align-items: center;
@@ -134,7 +103,7 @@
 }
 
 .header__cart-btn,
-.header__login-btn{
+.header__user-btn{
     position: relative;
     width: 42px;
     height: 42px;
@@ -150,15 +119,34 @@
 }
 
 .header__cart-btn:hover,
-.header__login-btn:hover{
+.header__user-btn:hover{
     background: #f5f5f5;
     color: var(--primary, #f98130);
 }
 
 .header__cart-btn svg,
-.header__login-btn svg{
+.header__user-btn svg{
     width: 22px;
     height: 22px;
+}
+
+.header__login-btn{
+    padding: 10px 24px;
+    background: var(--primary, #f98130);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Calibri', sans-serif;
+    white-space: nowrap;
+}
+
+.header__login-btn:hover{
+    background: var(--primary-hover, #e5722a);
 }
 
 .header__cart-count{
@@ -183,13 +171,13 @@
     right: 0;
 }
 
-.header__login-btn.logged-in{
+.header__user-btn.logged-in{
     background: var(--primary, #f98130);
     color: #fff;
     border-radius: 50%;
 }
 
-.header__login-btn.logged-in:hover{
+.header__user-btn.logged-in:hover{
     background: var(--primary-hover, #e5722a);
     color: #fff;
 }
@@ -207,11 +195,12 @@
         display: none;
     }
     
-    .header__search{
-        max-width: 200px;
-    }
-    
     .header__link{
         font-size: 14px;
+    }
+
+    .header__login-btn{
+        padding: 8px 16px;
+        font-size: 12px;
     }
 }

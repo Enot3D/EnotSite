@@ -177,16 +177,25 @@ function syncFavoritesOnLogin(userId) {
 function updateAuthUI() {
     var user = getCurrentUser();
     var loginBtn = document.getElementById('login-btn');
+    var userBtn = document.getElementById('user-btn');
     if (!loginBtn) return;
 
     if (user) {
-        loginBtn.innerHTML = escapeHtml(user.name.charAt(0).toUpperCase());
-        loginBtn.classList.add('logged-in');
-        loginBtn.onclick = function() { navigate('account'); };
+        loginBtn.style.display = 'none';
+        if (userBtn) {
+            userBtn.style.display = 'flex';
+            userBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+            userBtn.classList.add('logged-in');
+            userBtn.onclick = function() { navigate('account'); };
+        }
     } else {
-        loginBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
-        loginBtn.classList.remove('logged-in');
-        loginBtn.onclick = function() { openAuth(); };
+        loginBtn.style.display = '';
+        loginBtn.textContent = 'ВХОД';
+        if (userBtn) {
+            userBtn.style.display = 'none';
+            userBtn.classList.remove('logged-in');
+            userBtn.onclick = null;
+        }
     }
 }
 

@@ -84,11 +84,10 @@ class Catalog {
                     ${hasDiscount ? '<span class="product-card__badge product-card__badge--sale">-' + Math.round((1 - product.price / product.oldPrice) * 100) + '%</span>' : (!product.inStock ? '<span class="product-card__badge">Нет в наличии</span>' : '')}
                 </div>
                 <div class="product-card__body">
-                    <h3 class="product-card__title">${escapeHtml(product.name)}</h3>
-                    <div class="product-card__footer">
+                    <div class="product-card__price-row">
                         <div class="product-card__price">
-                            ${product.price.toLocaleString('ru-RU')} <span>₽</span>
                             ${hasDiscount ? '<span class="product-card__price-old">' + product.oldPrice.toLocaleString('ru-RU') + ' ₽</span>' : ''}
+                            ${product.price.toLocaleString('ru-RU')} ₽
                         </div>
                         <div class="product-card__cart-wrap">
                             <button class="product-card__add-btn">В корзину</button>
@@ -99,6 +98,7 @@ class Catalog {
                             </div>
                         </div>
                     </div>
+                    <div class="product-card__title">${escapeHtml(product.name)}</div>
                 </div>
             </div>
         `;
@@ -146,6 +146,17 @@ class Catalog {
     }
     
     setupFilters() {
+        var self = this;
+        var filterBtn = document.getElementById('catalog-filter-btn');
+        var filterPanel = document.getElementById('catalog-filters-panel');
+        
+        if (filterBtn && filterPanel) {
+            filterBtn.addEventListener('click', function() {
+                var isVisible = filterPanel.style.display !== 'none';
+                filterPanel.style.display = isVisible ? 'none' : 'flex';
+            });
+        }
+        
         document.querySelectorAll('.catalog__filter').forEach(filter => {
             filter.addEventListener('click', () => {
                 document.querySelectorAll('.catalog__filter').forEach(f => f.classList.remove('active'));
@@ -219,32 +230,29 @@ class Catalog {
         document.getElementById('modal-main-image').src = images[0] || '';
         document.getElementById('modal-main-image').alt = product.name;
         document.getElementById('modal-title').textContent = product.name;
-        document.getElementById('modal-description').textContent = product.description || '';
-        document.getElementById('modal-material').textContent = product.material || '—';
 
         const hasDiscount = product.oldPrice && product.oldPrice > product.price;
         const priceEl = document.getElementById('modal-price');
-        priceEl.innerHTML = product.price.toLocaleString('ru-RU') + ' ₽' + (hasDiscount ? '<span class="product-modal__price-old">' + product.oldPrice.toLocaleString('ru-RU') + ' ₽</span>' : '');
+        priceEl.innerHTML = (hasDiscount ? '<span class="product-modal__price-old">' + product.oldPrice.toLocaleString('ru-RU') + ' ₽</span> ' : '') + product.price.toLocaleString('ru-RU') + ' ₽';
         
-        const fullStars = Math.floor(product.rating || 0);
-        const halfStar = (product.rating || 0) % 1 >= 0.5;
-        let starsHtml = '';
-        for (let i = 0; i < fullStars; i++) starsHtml += '\u2605';
-        if (halfStar) starsHtml += '\u2606';
-        document.getElementById('modal-stars').textContent = starsHtml || '—';
-        document.getElementById('modal-reviews').textContent = '(' + (product.reviews || 0) + ' отзывов)';
+        const reviewsCount = product.reviews || 0;
+        document.getElementById('modal-reviews-count').textContent = 'Отзывы (' + reviewsCount + ')';
         
         const stockEl = document.getElementById('modal-stock');
         if (stockEl) {
-            stockEl.innerHTML = product.inStock !== false ? '<span style="color:#4caf50;">&#9679; В наличии</span> — отправка сегодня' : '<span style="color:#e53935;">&#9679; Нет в наличии</span>';
+            if (product.inStock !== false) {
+                stockEl.innerHTML = '<span class="product-modal__delivery-dot product-modal__delivery-dot--green"></span><span><strong style="color:#4caf50;">В наличии</strong> — отправка сегодня</span>';
+            } else {
+                stockEl.innerHTML = '<span class="product-modal__delivery-dot" style="background:#e53935;"></span><span><strong style="color:#e53935;">Нет в наличии</strong></span>';
+            }
         }
 
-        const specsEl = document.getElementById('modal-specs');
+        var specsEl = document.getElementById('modal-specs');
         if (specsEl) {
             var specsHtml = '';
             if (product.specs && product.specs.length) {
                 product.specs.forEach(function(s) {
-                    specsHtml += '<div class="product-modal__spec-row"><span class="product-modal__spec-key">' + escapeHtml(s.key) + '</span><span class="product-modal__spec-val">' + escapeHtml(s.value) + '</span></div>';
+                    specsHtml += '<div class="product-modal__spec-row"><span class="product-modal__spec-key">' + escapeHtml(s.key) + ':</span><span class="product-modal__spec-val">' + escapeHtml(s.value) + '</span></div>';
                 });
             }
             specsEl.innerHTML = specsHtml;
@@ -258,10 +266,10 @@ class Catalog {
         document.body.style.overflow = 'hidden';
 
         var reviewsHtml = renderProductReviews(productId);
-        var cartSection = modal.querySelector('.product-modal__cart');
+        var deliverySection = modal.querySelector('.product-modal__delivery');
         var existingReviews = modal.querySelector('.product-reviews');
-        if (cartSection && reviewsHtml && !existingReviews) {
-            cartSection.insertAdjacentHTML('afterend', reviewsHtml);
+        if (deliverySection && reviewsHtml && !existingReviews) {
+            deliverySection.insertAdjacentHTML('afterend', reviewsHtml);
         }
     }
     
