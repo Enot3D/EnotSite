@@ -7,6 +7,13 @@
     <meta name="description" content="EnotSpace - каталог товаров, 3D-печать, моделирование и сканирование">
     <link rel="stylesheet" href="style/reset.css">
     <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+    <script>
+        (function() {
+            var saved = localStorage.getItem('enotspace_theme');
+            var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     <link rel="stylesheet" href="style/header.css">
     <link rel="stylesheet" href="style/catalog.css">
     <link rel="stylesheet" href="style/services.css">

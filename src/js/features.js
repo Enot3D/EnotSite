@@ -1,13 +1,17 @@
 // === DARK THEME ===
+function getBrowserTheme() {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 function getTheme() {
-    return localStorage.getItem('enotspace_theme') || 'light';
+    var saved = localStorage.getItem('enotspace_theme');
+    if (saved) return saved;
+    return getBrowserTheme();
 }
 
 function setTheme(theme) {
     localStorage.setItem('enotspace_theme', theme);
     document.documentElement.setAttribute('data-theme', theme);
-    var btn = document.getElementById('theme-toggle');
-    if (btn) btn.textContent = theme === 'dark' ? '\u2600' : '\u263E';
 }
 
 function toggleTheme() {
@@ -17,6 +21,13 @@ function toggleTheme() {
 
 function initTheme() {
     setTheme(getTheme());
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        var saved = localStorage.getItem('enotspace_theme');
+        if (!saved) {
+            setTheme(e.matches ? 'dark' : 'light');
+        }
+    });
 }
 
 // === NOTIFICATIONS ===
