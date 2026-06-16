@@ -221,24 +221,24 @@ function initAccount() {
     if (isAdmin(user)) {
         setupAdminTabs();
         setTimeout(renderNotifications, 100);
-    }
-
-    var tabs = document.querySelectorAll('.account__tab');
-    tabs.forEach(function(tab) {
-        tab.addEventListener('click', function() {
-            tabs.forEach(function(t) { t.classList.remove('active'); });
-            tab.classList.add('active');
-            document.querySelectorAll('.account__tab-content').forEach(function(c) {
-                c.classList.remove('active');
-                c.style.display = 'none';
+    } else {
+        var tabs = document.querySelectorAll('.account__tab');
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                tabs.forEach(function(t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+                document.querySelectorAll('.account__tab-content').forEach(function(c) {
+                    c.classList.remove('active');
+                    c.style.display = 'none';
+                });
+                var target = document.getElementById('tab-' + tab.dataset.tab);
+                if (target) {
+                    target.classList.add('active');
+                    target.style.display = '';
+                }
             });
-            var target = document.getElementById('tab-' + tab.dataset.tab);
-            if (target) {
-                target.classList.add('active');
-                target.style.display = '';
-            }
         });
-    });
+    }
 
     document.getElementById('settings-save').addEventListener('click', function() {
         var newName = sanitizeInput(document.getElementById('settings-name').value, 100);

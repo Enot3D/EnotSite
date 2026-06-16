@@ -204,6 +204,9 @@ function openProductEditor(product) {
         saveProduct(productData).then(function() {
             closeEditor();
             if (typeof catalog !== 'undefined') catalog.reinit();
+        }).catch(function(err) {
+            console.error('Ошибка сохранения товара:', err);
+            alert('Ошибка сохранения: ' + err.message);
         });
     });
 
@@ -213,31 +216,6 @@ function openProductEditor(product) {
     }
     }); // end loadCategories().then
 }
-
-function openCategoryManager() {
-    loadCategories().then(function(categories) {
-
-    function renderCatList() {
-        var list = document.getElementById('cat-manager-list');
-        if (!list) return;
-        list.innerHTML = categories.map(function(c, i) {
-            return '<div class="cat-item">' +
-                '<span class="cat-item__name" data-index="' + i + '">' + escapeHtml(c.name) + '</span>' +
-                '<span class="cat-item__id">' + escapeHtml(c.id) + '</span>' +
-                '<button class="cat-item__edit" data-index="' + i + '">✎</button>' +
-                '<button class="cat-item__delete" data-index="' + i + '">✕</button>' +
-            '</div>';
-        }).join('');
-
-        list.querySelectorAll('.cat-item__edit').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var idx = parseInt(btn.dataset.index);
-                var newName = prompt('Название категории:', categories[idx].name);
-                if (newName && newName.trim()) {
-                    categories[idx].name = newName.trim();
-                    saveCategories(categories);
-                    renderCatList();
-                }
             });
         });
 

@@ -19,12 +19,31 @@ function setupAdminTabs() {
         '<button class="account__tab" data-tab="users">Пользователи</button>' +
         '<button class="account__tab" data-tab="settings">Настройки</button>';
 
-    document.querySelectorAll('.account__tab-content').forEach(function(c) { c.classList.remove('active'); });
-    document.getElementById('tab-dashboard').classList.add('active');
-    document.getElementById('tab-admin-chat').style.display = '';
-    document.getElementById('tab-all-orders').style.display = '';
-    document.getElementById('tab-admin-promos').style.display = '';
-    document.getElementById('tab-users').style.display = '';
+    document.querySelectorAll('.account__tab-content').forEach(function(c) {
+        c.classList.remove('active');
+        c.style.display = 'none';
+    });
+    var dashboard = document.getElementById('tab-dashboard');
+    if (dashboard) {
+        dashboard.classList.add('active');
+        dashboard.style.display = '';
+    }
+
+    tabsContainer.querySelectorAll('.account__tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            tabsContainer.querySelectorAll('.account__tab').forEach(function(t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+            document.querySelectorAll('.account__tab-content').forEach(function(c) {
+                c.classList.remove('active');
+                c.style.display = 'none';
+            });
+            var target = document.getElementById('tab-' + tab.dataset.tab);
+            if (target) {
+                target.classList.add('active');
+                target.style.display = '';
+            }
+        });
+    });
 
     renderDashboard();
     renderAdminChat();
