@@ -72,28 +72,29 @@ function renderCatalogAdminControls() {
     var user = getCurrentUser();
     if (!user || !isAdmin(user)) return;
 
-    var existingBar = document.querySelector('.catalog-admin-bar');
-    if (existingBar) return;
-
     var grid = document.getElementById('products-grid');
     if (!grid) return;
 
-    grid.insertAdjacentHTML('beforebegin',
-        '<div class="catalog-admin-bar">' +
-            '<button class="catalog-admin-btn" id="admin-add-product">+ Добавить товар</button>' +
-            '<button class="catalog-admin-btn catalog-admin-btn--secondary" id="admin-manage-categories">Управление категориями</button>' +
-        '</div>'
-    );
+    var existingBar = document.querySelector('.catalog-admin-bar');
+    if (!existingBar) {
+        grid.insertAdjacentHTML('beforebegin',
+            '<div class="catalog-admin-bar">' +
+                '<button class="catalog-admin-btn" id="admin-add-product">+ Добавить товар</button>' +
+                '<button class="catalog-admin-btn catalog-admin-btn--secondary" id="admin-manage-categories">Управление категориями</button>' +
+            '</div>'
+        );
 
-    document.getElementById('admin-add-product').addEventListener('click', function() {
-        openProductEditor(null);
-    });
+        document.getElementById('admin-add-product').addEventListener('click', function() {
+            openProductEditor(null);
+        });
 
-    document.getElementById('admin-manage-categories').addEventListener('click', function() {
-        openCategoryManager();
-    });
+        document.getElementById('admin-manage-categories').addEventListener('click', function() {
+            openCategoryManager();
+        });
+    }
 
     grid.querySelectorAll('.product-card').forEach(function(card) {
+        if (card.querySelector('.product-card__admin-controls')) return;
         var id = parseInt(card.dataset.id);
         card.insertAdjacentHTML('beforeend',
             '<div class="product-card__admin-controls">' +
@@ -104,25 +105,29 @@ function renderCatalogAdminControls() {
     });
 
     grid.querySelectorAll('.product-card__admin-btn--edit').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
+        btn.removeEventListener('click', btn._handler);
+        btn._handler = function(e) {
             e.stopPropagation();
             var id = parseInt(btn.dataset.id);
             loadProducts().then(function(products) {
                 var product = products.find(function(p) { return p.id === id; });
                 if (product) openProductEditor(product);
             });
-        });
+        };
+        btn.addEventListener('click', btn._handler);
     });
 
     grid.querySelectorAll('.product-card__admin-btn--delete').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
+        btn.removeEventListener('click', btn._handler);
+        btn._handler = function(e) {
             e.stopPropagation();
             var id = parseInt(btn.dataset.id);
             if (!confirm('Удалить товар?')) return;
             deleteProduct(id).then(function() {
                 if (typeof catalog !== 'undefined') catalog.reinit();
             });
-        });
+        };
+        btn.addEventListener('click', btn._handler);
     });
 }
 
