@@ -75,18 +75,20 @@ class Catalog {
         var existing = localCart.find(function(i) { return i.productId === product.id; });
         const inCart = existing ? existing.quantity : 0;
         const firstImage = product.colors && product.colors[0] ? product.colors[0].images[0] : '';
+        const hasDiscount = product.oldPrice && product.oldPrice > product.price;
         
         return `
             <div class="product-card" data-id="${product.id}">
                 <div class="product-card__image">
                     <img src="${firstImage}" alt="${escapeAttr(product.name)}" loading="lazy">
-                    ${!product.inStock ? '<span class="product-card__badge">Нет в наличии</span>' : ''}
+                    ${hasDiscount ? '<span class="product-card__badge product-card__badge--sale">-' + Math.round((1 - product.price / product.oldPrice) * 100) + '%</span>' : (!product.inStock ? '<span class="product-card__badge">Нет в наличии</span>' : '')}
                 </div>
                 <div class="product-card__body">
                     <h3 class="product-card__title">${escapeHtml(product.name)}</h3>
                     <div class="product-card__footer">
                         <div class="product-card__price">
                             ${product.price.toLocaleString('ru-RU')} <span>₽</span>
+                            ${hasDiscount ? '<span class="product-card__price-old">' + product.oldPrice.toLocaleString('ru-RU') + ' ₽</span>' : ''}
                         </div>
                         <div class="product-card__cart-wrap">
                             <button class="product-card__add-btn">В корзину</button>
@@ -212,22 +214,41 @@ class Catalog {
         modal.dataset.productId = productId;
         
         const colorIndex = this.currentColorIndex[productId] || 0;
-        const images = product.colors[colorIndex].images;
+        const images = product.colors && product.colors[colorIndex] ? product.colors[colorIndex].images : [];
         
-        document.getElementById('modal-main-image').src = images[0];
+        document.getElementById('modal-main-image').src = images[0] || '';
         document.getElementById('modal-main-image').alt = product.name;
         document.getElementById('modal-title').textContent = product.name;
-        document.getElementById('modal-description').textContent = product.description;
-        document.getElementById('modal-material').textContent = product.material;
-        document.getElementById('modal-price').textContent = product.price.toLocaleString('ru-RU') + ' ₽';
+        document.getElementById('modal-description').textContent = product.description || '';
+        document.getElementById('modal-material').textContent = product.material || '—';
+
+        const hasDiscount = product.oldPrice && product.oldPrice > product.price;
+        const priceEl = document.getElementById('modal-price');
+        priceEl.innerHTML = product.price.toLocaleString('ru-RU') + ' ₽' + (hasDiscount ? '<span class="product-modal__price-old">' + product.oldPrice.toLocaleString('ru-RU') + ' ₽</span>' : '');
         
-        const fullStars = Math.floor(product.rating);
-        const halfStar = product.rating % 1 >= 0.5;
+        const fullStars = Math.floor(product.rating || 0);
+        const halfStar = (product.rating || 0) % 1 >= 0.5;
         let starsHtml = '';
         for (let i = 0; i < fullStars; i++) starsHtml += '\u2605';
         if (halfStar) starsHtml += '\u2606';
-        document.getElementById('modal-stars').textContent = starsHtml;
-        document.getElementById('modal-reviews').textContent = '(' + product.reviews + ' отзывов)';
+        document.getElementById('modal-stars').textContent = starsHtml || '—';
+        document.getElementById('modal-reviews').textContent = '(' + (product.reviews || 0) + ' отзывов)';
+        
+        const stockEl = document.getElementById('modal-stock');
+        if (stockEl) {
+            stockEl.innerHTML = product.inStock !== false ? '<span style="color:#4caf50;">&#9679; В наличии</span> — отправка сегодня' : '<span style="color:#e53935;">&#9679; Нет в наличии</span>';
+        }
+
+        const specsEl = document.getElementById('modal-specs');
+        if (specsEl) {
+            var specsHtml = '';
+            if (product.specs && product.specs.length) {
+                product.specs.forEach(function(s) {
+                    specsHtml += '<div class="product-modal__spec-row"><span class="product-modal__spec-key">' + escapeHtml(s.key) + '</span><span class="product-modal__spec-val">' + escapeHtml(s.value) + '</span></div>';
+                });
+            }
+            specsEl.innerHTML = specsHtml;
+        }
         
         this.renderThumbnails(images);
         this.renderColors(product, colorIndex);

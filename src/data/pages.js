@@ -91,10 +91,12 @@ PAGES.catalog = `<section class="catalog">
                         <button class="product-modal__add-btn" id="modal-add-to-cart">В корзину</button>
                     </div>
                 </div>
+                <div class="product-modal__stock" id="modal-stock"></div>
                 <div class="product-modal__colors" id="modal-colors">
                     <span class="product-modal__colors-label">Выбрать цвет:</span>
                     <div class="product-modal__color-options" id="modal-color-options"></div>
                 </div>
+                <div class="product-modal__specs" id="modal-specs"></div>
                 <div class="product-modal__material">
                     <span class="product-modal__material-label">Материал:</span>
                     <span class="product-modal__material-value" id="modal-material"></span>

@@ -132,37 +132,52 @@ function openProductEditor(product) {
         var images = (product && product.colors && product.colors[0]) ? product.colors[0].images.join('\n') : '';
         var colorNames = (product && product.colors) ? product.colors.map(function(c) { return c.name; }).join(', ') : '';
         var colorHexes = (product && product.colors) ? product.colors.map(function(c) { return c.hex; }).join(', ') : '';
+        var specs = (product && product.specs) ? product.specs : [];
 
         var catOptions = categories.map(function(c) {
             var sel = (product && product.category === c.id) ? ' selected' : '';
             return '<option value="' + c.id + '"' + sel + '>' + escapeHtml(c.name) + '</option>';
         }).join('');
 
+        var specsHtml = '<div id="specs-list">';
+        if (specs.length) {
+            specs.forEach(function(s, i) {
+                specsHtml += '<div class="admin-form__row specs-row" style="margin-bottom:8px;">' +
+                    '<div class="admin-form__group"><input class="admin-form__input" type="text" placeholder="Название (напр. Материал)" data-spec-key="' + i + '" value="' + escapeAttr(s.key) + '"></div>' +
+                    '<div class="admin-form__group" style="display:flex;gap:8px;"><input class="admin-form__input" type="text" placeholder="Значение (напр. PLA)" data-spec-val="' + i + '" value="' + escapeAttr(s.value) + '">' +
+                    '<button type="button" class="admin-form__btn admin-form__btn--cancel specs-remove" data-spec-remove="' + i + '" style="flex-shrink:0;padding:8px 12px;">✕</button></div>' +
+                '</div>';
+            });
+        }
+        specsHtml += '</div>';
+
         var html = '<div class="admin-modal" id="product-editor-modal">' +
             '<div class="admin-modal__overlay" id="editor-overlay"></div>' +
-            '<div class="admin-modal__content">' +
+            '<div class="admin-modal__content" style="max-width:700px;">' +
                 '<button class="admin-modal__close" id="editor-close">&times;</button>' +
                 '<h2 class="admin-modal__title">' + (isNew ? 'Новый товар' : 'Редактирование: ' + (product ? product.name : '')) + '</h2>' +
                 '<form class="admin-form" id="product-editor-form">' +
-                    '<div class="admin-form__row">' +
-                        '<div class="admin-form__group"><label class="admin-form__label">Название *</label><input class="admin-form__input" type="text" id="ed-name" value="' + escapeAttr(product ? product.name : '') + '" required></div>' +
-                        '<div class="admin-form__group"><label class="admin-form__label">Цена (₽) *</label><input class="admin-form__input" type="number" id="ed-price" value="' + (product ? product.price : '') + '" required></div>' +
-                    '</div>' +
+                    '<div class="admin-form__group"><label class="admin-form__label">Название *</label><input class="admin-form__input" type="text" id="ed-name" value="' + escapeAttr(product ? product.name : '') + '" required></div>' +
                     '<div class="admin-form__group"><label class="admin-form__label">Описание</label><textarea class="admin-form__textarea" id="ed-desc" rows="3">' + escapeHtml(product ? product.description : '') + '</textarea></div>' +
+                    '<div class="admin-form__row">' +
+                        '<div class="admin-form__group"><label class="admin-form__label">Цена со скидкой (₽) *</label><input class="admin-form__input" type="number" id="ed-price" value="' + (product ? product.price : '') + '" required></div>' +
+                        '<div class="admin-form__group"><label class="admin-form__label">Цена без скидки (₽)</label><input class="admin-form__input" type="number" id="ed-old-price" value="' + (product && product.oldPrice ? product.oldPrice : '') + '" placeholder="Оставьте пустым если нет скидки"></div>' +
+                    '</div>' +
                     '<div class="admin-form__row">' +
                         '<div class="admin-form__group"><label class="admin-form__label">Категория</label><select class="admin-form__select" id="ed-category">' + catOptions + '</select></div>' +
                         '<div class="admin-form__group"><label class="admin-form__label">Материал</label><input class="admin-form__input" type="text" id="ed-material" value="' + escapeAttr(product ? product.material : '') + '"></div>' +
                     '</div>' +
+                    '<div class="admin-form__group"><label class="admin-form__label"><input type="checkbox" id="ed-stock"' + (product && product.inStock === false ? '' : ' checked') + '> В наличии</label></div>' +
                     '<div class="admin-form__group"><label class="admin-form__label">URL изображений (по одному на строку)</label><textarea class="admin-form__textarea" id="ed-images" rows="3" placeholder="https://...">' + escapeHtml(images) + '</textarea></div>' +
                     '<div class="admin-form__row">' +
                         '<div class="admin-form__group"><label class="admin-form__label">Названия цветов (через запятую)</label><input class="admin-form__input" type="text" id="ed-color-names" value="' + escapeAttr(colorNames) + '"></div>' +
                         '<div class="admin-form__group"><label class="admin-form__label">HEX цвета (через запятую)</label><input class="admin-form__input" type="text" id="ed-color-hex" value="' + escapeAttr(colorHexes) + '"></div>' +
                     '</div>' +
-                    '<div class="admin-form__row">' +
-                        '<div class="admin-form__group"><label class="admin-form__label">Рейтинг</label><input class="admin-form__input" type="number" step="0.1" min="0" max="5" id="ed-rating" value="' + (product ? product.rating : '4.5') + '"></div>' +
-                        '<div class="admin-form__group"><label class="admin-form__label">Отзывов</label><input class="admin-form__input" type="number" id="ed-reviews" value="' + (product ? product.reviews : '0') + '"></div>' +
+                    '<div class="admin-form__group">' +
+                        '<label class="admin-form__label">Характеристики</label>' +
+                        specsHtml +
+                        '<button type="button" class="admin-form__btn admin-form__btn--cancel" id="add-spec-btn" style="margin-top:8px;">+ Добавить характеристику</button>' +
                     '</div>' +
-                    '<div class="admin-form__group"><label class="admin-form__checkbox"><input type="checkbox" id="ed-stock"' + (product && product.inStock === false ? '' : ' checked') + '> В наличии</label></div>' +
                     '<div class="admin-form__actions">' +
                         '<button type="button" class="admin-form__btn admin-form__btn--cancel" id="editor-cancel">Отмена</button>' +
                         '<button type="submit" class="admin-form__btn admin-form__btn--save">Сохранить</button>' +
@@ -179,11 +194,32 @@ function openProductEditor(product) {
         document.getElementById('editor-close').addEventListener('click', closeEditor);
         document.getElementById('editor-cancel').addEventListener('click', closeEditor);
 
+        document.getElementById('add-spec-btn').addEventListener('click', function() {
+            var list = document.getElementById('specs-list');
+            var idx = list.querySelectorAll('.specs-row').length;
+            var row = document.createElement('div');
+            row.className = 'admin-form__row specs-row';
+            row.style.marginBottom = '8px';
+            row.innerHTML = '<div class="admin-form__group"><input class="admin-form__input" type="text" placeholder="Название (напр. Материал)" data-spec-key="' + idx + '"></div>' +
+                '<div class="admin-form__group" style="display:flex;gap:8px;"><input class="admin-form__input" type="text" placeholder="Значение (напр. PLA)" data-spec-val="' + idx + '">' +
+                '<button type="button" class="admin-form__btn admin-form__btn--cancel specs-remove" style="flex-shrink:0;padding:8px 12px;">✕</button></div>';
+            list.appendChild(row);
+            row.querySelector('.specs-remove').addEventListener('click', function() { row.remove(); });
+        });
+
+        modal.querySelectorAll('.specs-remove').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                btn.closest('.specs-row').remove();
+            });
+        });
+
         document.getElementById('product-editor-form').addEventListener('submit', function(e) {
             e.preventDefault();
             var name = sanitizeInput(document.getElementById('ed-name').value, 200);
             var price = parseInt(document.getElementById('ed-price').value);
             if (!name || !price) { alert('Заполните название и цену'); return; }
+
+            var oldPrice = parseInt(document.getElementById('ed-old-price').value) || null;
 
             var imagesRaw = document.getElementById('ed-images').value.trim().split('\n').filter(function(l) { return l.trim(); });
             var colorNamesRaw = document.getElementById('ed-color-names').value.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
@@ -199,17 +235,28 @@ function openProductEditor(product) {
                 });
             }
 
+            var specKeys = modal.querySelectorAll('[data-spec-key]');
+            var specsData = [];
+            specKeys.forEach(function(keyEl) {
+                var valEl = modal.querySelector('[data-spec-val="' + keyEl.dataset.specKey + '"]');
+                var k = sanitizeInput(keyEl.value, 100);
+                var v = valEl ? sanitizeInput(valEl.value, 200) : '';
+                if (k && v) specsData.push({ key: k, value: v });
+            });
+
             var productData = {
                 id: product ? product.id : Date.now(),
                 name: name,
                 description: sanitizeInput(document.getElementById('ed-desc').value, 1000),
                 price: price,
+                oldPrice: oldPrice,
                 category: document.getElementById('ed-category').value,
                 material: sanitizeInput(document.getElementById('ed-material').value, 200),
                 colors: colors,
                 inStock: document.getElementById('ed-stock').checked,
                 rating: parseFloat(document.getElementById('ed-rating').value) || 4.5,
-                reviews: parseInt(document.getElementById('ed-reviews').value) || 0
+                reviews: parseInt(document.getElementById('ed-reviews').value) || 0,
+                specs: specsData
             };
 
             saveProduct(productData).then(function() {
