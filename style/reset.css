@@ -11,6 +11,10 @@
 	box-sizing: border-box;
 }
 
+body {
+    font-family: 'Actay', sans-serif;
+}
+
 :root {
     --bg: #fafafa;
     --surface: #ffffff;

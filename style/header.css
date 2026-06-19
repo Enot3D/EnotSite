@@ -24,7 +24,6 @@
 .header__nav{
     display: flex;
     align-items: center;
-    gap: 32px;
 }
 
 .header__logo-link{
@@ -34,28 +33,31 @@
 }
 
 .header__logo{
-    height: 44px;
+    height: 48px;
     width: auto;
     transition: all 0.35s ease;
 }
 
 .header--compact .header__logo{
-    height: 34px;
+    height: 38px;
 }
 
 .header__list-items{
     display: flex;
-    gap: 32px;
+    gap: 40px;
     list-style: none;
     margin: 0;
     padding: 0;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .header__link{
     color: var(--text-secondary, #888787);
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 500;
-    font-family: 'Calibri', sans-serif;
+    font-family: 'Actay', sans-serif;
     transition: all 0.3s ease;
     padding: 8px 0;
     position: relative;
@@ -63,7 +65,7 @@
 }
 
 .header--compact .header__link{
-    font-size: 14px;
+    font-size: 16px;
     padding: 6px 0;
 }
 
@@ -131,7 +133,7 @@
 }
 
 .header__login-btn{
-    padding: 10px 24px;
+    padding: 10px 28px;
     background: var(--primary, #f98130);
     color: #fff;
     border: none;
@@ -141,7 +143,7 @@
     letter-spacing: 0.5px;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-family: 'Calibri', sans-serif;
+    font-family: 'Actay', sans-serif;
     white-space: nowrap;
 }
 
