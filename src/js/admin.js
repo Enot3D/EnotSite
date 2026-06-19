@@ -480,7 +480,7 @@ function showClientChat(client) {
             html += '<div class="admin-chat__msg ' + (isAdmin ? 'admin-chat__msg--admin' : 'admin-chat__msg--user') + '">';
             html += '<div class="admin-chat__msg-bubble">';
             if (msg.image) {
-                html += '<img src="' + msg.image + '" class="admin-chat__image" style="max-width:240px;border-radius:8px;cursor:pointer;" onclick="window.open(this.src)">';
+                html += '<img src="' + msg.image + '" class="admin-chat__image" style="max-width:240px;border-radius:8px;" onclick="openChatLightbox(this.src)">';
                 if (msg.text) html += '<div style="margin-top:6px;">' + escapeHtml(msg.text) + '</div>';
             } else {
                 html += escapeHtml(msg.text);
