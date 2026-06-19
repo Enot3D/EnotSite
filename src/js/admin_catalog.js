@@ -12,13 +12,53 @@ function renderCatalogFilters() {
 }
 
 function loadProducts() {
+    var cacheKey = 'enotspace_products_cache';
+    var cacheTimeKey = 'enotspace_products_cache_time';
+    var CACHE_TTL = 5 * 60 * 1000;
+
+    var cached = localStorage.getItem(cacheKey);
+    var cacheTime = parseInt(localStorage.getItem(cacheTimeKey) || '0');
+    var isStale = Date.now() - cacheTime > CACHE_TTL;
+
+    if (cached && !isStale) {
+        try {
+            var products = JSON.parse(cached);
+            refreshProductsInBackground();
+            return Promise.resolve(products);
+        } catch (e) {}
+    }
+
     return db.collection('products').get().then(function(snapshot) {
         var products = [];
         snapshot.forEach(function(doc) {
             products.push(Object.assign({ id: parseInt(doc.id) }, doc.data()));
         });
-        return products.length > 0 ? products : PRODUCTS.slice();
+        var result = products.length > 0 ? products : PRODUCTS.slice();
+        localStorage.setItem(cacheKey, JSON.stringify(result));
+        localStorage.setItem(cacheTimeKey, String(Date.now()));
+        return result;
     });
+}
+
+function refreshProductsInBackground() {
+    db.collection('products').get().then(function(snapshot) {
+        var products = [];
+        snapshot.forEach(function(doc) {
+            products.push(Object.assign({ id: parseInt(doc.id) }, doc.data()));
+        });
+        var result = products.length > 0 ? products : PRODUCTS.slice();
+        localStorage.setItem('enotspace_products_cache', JSON.stringify(result));
+        localStorage.setItem('enotspace_products_cache_time', String(Date.now()));
+        if (typeof catalog !== 'undefined') {
+            catalog.products = result;
+            catalog.renderProducts();
+        }
+    }).catch(function() {});
+}
+
+function invalidateProductsCache() {
+    localStorage.removeItem('enotspace_products_cache');
+    localStorage.removeItem('enotspace_products_cache_time');
 }
 
 function saveProducts(products) {
@@ -26,25 +66,36 @@ function saveProducts(products) {
     products.forEach(function(p) {
         batch.set(db.collection('products').doc(String(p.id)), p);
     });
-    return batch.commit();
+    return batch.commit().then(function() { invalidateProductsCache(); });
 }
 
 function saveProduct(product) {
-    return db.collection('products').doc(String(product.id)).set(product, { merge: true });
+    return db.collection('products').doc(String(product.id)).set(product, { merge: true }).then(function() { invalidateProductsCache(); });
 }
 
 function deleteProduct(productId) {
-    return db.collection('products').doc(String(productId)).delete();
+    return db.collection('products').doc(String(productId)).delete().then(function() { invalidateProductsCache(); });
 }
 
 function loadCategories() {
+    var cacheKey = 'enotspace_categories_cache';
+    var cached = localStorage.getItem(cacheKey);
+    if (cached) {
+        try {
+            return Promise.resolve(JSON.parse(cached));
+        } catch (e) {}
+    }
     return db.collection('settings').doc('categories').get().then(function(doc) {
-        return doc.exists ? doc.data().categories : [];
+        var categories = doc.exists ? doc.data().categories : [];
+        localStorage.setItem(cacheKey, JSON.stringify(categories));
+        return categories;
     });
 }
 
 function saveCategories(cats) {
-    return db.collection('settings').doc('categories').set({ categories: cats });
+    return db.collection('settings').doc('categories').set({ categories: cats }).then(function() {
+        localStorage.removeItem('enotspace_categories_cache');
+    });
 }
 
 function loadServicePrices() {
