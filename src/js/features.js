@@ -29,14 +29,7 @@ function resetTheme() {
 }
 
 function initTheme() {
-    applyTheme(getTheme());
-
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-        var saved = localStorage.getItem('enotspace_theme');
-        if (!saved) {
-            applyTheme(e.matches ? 'dark' : 'light');
-        }
-    });
+    document.documentElement.setAttribute('data-theme', 'light');
 }
 
 // === NOTIFICATIONS ===
