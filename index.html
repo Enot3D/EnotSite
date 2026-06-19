@@ -116,9 +116,6 @@
                     catalog.reinit();
                 }, 150);
             }
-            if (page === 'services') {
-                setupServiceCards();
-            }
             if (page === 'fullcycle') {
                 setTimeout(function() { initFullcycle(); }, 100);
             }
@@ -147,17 +144,6 @@
                     initAboutPage();
                 }, 100);
             }
-        }
-
-        function setupServiceCards() {
-            document.querySelectorAll('.service-card[data-service]').forEach(function(card) {
-                card.addEventListener('click', function() {
-                    var service = card.dataset.service;
-                    if (routes[service]) {
-                        navigate(service);
-                    }
-                });
-            });
         }
 
         function updateActiveLink(page) {
