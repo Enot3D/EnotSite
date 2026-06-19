@@ -219,11 +219,19 @@
     background: #f5f5f5;
     border-radius: 12px;
     padding: 4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.account__tabs::-webkit-scrollbar {
+    display: none;
 }
 
 .account__tab {
     flex: 1;
-    padding: 12px 20px;
+    min-width: 0;
+    padding: 12px 16px;
     background: transparent;
     border: none;
     border-radius: 10px;
@@ -232,6 +240,7 @@
     color: #888;
     cursor: pointer;
     transition: all 0.3s ease;
+    white-space: nowrap;
 }
 
 .account__tab.active {
@@ -1730,15 +1739,28 @@
     }
     .admin-chat {
         grid-template-columns: 1fr;
-        height: 450px;
+        height: 400px;
     }
     .admin-chat__sidebar {
         border-right: none;
         border-bottom: 1px solid #f0f0f0;
-        max-height: 200px;
+        max-height: 180px;
     }
     .admin-chat__main {
-        min-height: 350px;
+        min-height: 300px;
+    }
+    .account {
+        padding: 20px 12px;
+    }
+    .account__tabs {
+        margin-bottom: 20px;
+    }
+    .account__tab {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+    .client-chat {
+        height: 420px;
     }
 }
 

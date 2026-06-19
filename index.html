@@ -228,7 +228,7 @@
             var header = document.getElementById('site-header');
             if (!header) return;
             window.addEventListener('scroll', function() {
-                if (window.pageYOffset > 60) {
+                if (window.innerWidth > 768 && window.pageYOffset > 60) {
                     header.classList.add('header--compact');
                 } else {
                     header.classList.remove('header--compact');
