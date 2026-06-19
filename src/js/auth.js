@@ -539,7 +539,7 @@ function renderClientChat() {
         clientUnreadChat = { projects: projects, allMessages: allMessages };
         renderUnifiedChatMessages(allMessages, projects);
         setupUnifiedChatInput(projects);
-    }).catch(function(err) {
+    }, function(err) {
         console.error('Ошибка загрузки чата:', err);
     });
 }
@@ -658,21 +658,20 @@ function setupUnifiedChatInput(projects) {
         if (!targetProject) return;
 
         if (pendingImage) {
-            var storageRef = storage.ref('chat_images/' + Date.now() + '_' + pendingImage.name);
-            storageRef.put(pendingImage).then(function(snapshot) {
-                return snapshot.ref.getDownloadURL();
-            }).then(function(url) {
-                var msg = { from: 'user', text: text || '', date: new Date().toISOString(), image: url };
+            var imgToCompress = pendingImage;
+            pendingImage = null;
+            previewWrap.style.display = 'none';
+            previewImg.src = '';
+
+            compressImage(imgToCompress, 800, 0.7).then(function(dataUrl) {
+                var msg = { from: 'user', text: text || '', date: new Date().toISOString(), image: dataUrl };
                 var currentMessages = targetProject.messages || [];
                 currentMessages.push(msg);
                 return db.collection('projects').doc(targetProject._docId).update({ messages: currentMessages });
             }).catch(function(err) {
-                console.error('Ошибка загрузки фото:', err);
-                alert('Не удалось загрузить фото');
+                console.error('Ошибка обработки фото:', err);
+                alert('Не удалось обработать фото');
             });
-            pendingImage = null;
-            previewWrap.style.display = 'none';
-            previewImg.src = '';
         } else {
             var currentMessages = targetProject.messages || [];
             currentMessages.push({ from: 'user', text: text, date: new Date().toISOString() });

@@ -390,9 +390,10 @@ function renderAdminChat() {
         if (adminActiveClientIndex >= 0 && adminActiveClientIndex < clients.length) {
             showClientChat(clients[adminActiveClientIndex]);
         }
-    }).catch(function(err) {
+    }, function(err) {
         console.error('Ошибка загрузки чатов:', err);
-        container.querySelector('#admin-chat-sidebar').innerHTML = '<div class="admin-chat__empty"><p>Ошибка загрузки</p></div>';
+        var sidebar = document.getElementById('admin-chat-sidebar');
+        if (sidebar) sidebar.innerHTML = '<div class="admin-chat__empty"><p>Ошибка загрузки</p></div>';
     });
 }
 
@@ -579,16 +580,13 @@ function showClientChat(client) {
             previewWrap.style.display = 'none';
             previewImg.src = '';
 
-            var storageRef = storage.ref('chat_images/' + Date.now() + '_' + imgFile.name);
-            storageRef.put(imgFile).then(function(snapshot) {
-                return snapshot.ref.getDownloadURL();
-            }).then(function(url) {
+            compressImage(imgFile, 800, 0.7).then(function(dataUrl) {
                 var currentMessages = targetProject.messages || [];
-                currentMessages.push({ from: 'admin', text: text || '', date: new Date().toISOString(), image: url });
+                currentMessages.push({ from: 'admin', text: text || '', date: new Date().toISOString(), image: dataUrl });
                 return db.collection('projects').doc(targetProject._docId).update({ messages: currentMessages });
             }).catch(function(err) {
-                console.error('Ошибка загрузки фото:', err);
-                alert('Не удалось загрузить фото');
+                console.error('Ошибка обработки фото:', err);
+                alert('Не удалось обработать фото');
             });
         } else {
             var currentMessages = targetProject.messages || [];
