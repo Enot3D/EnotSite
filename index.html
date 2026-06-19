@@ -101,7 +101,6 @@
 
             if (page !== 'account') {
                 if (typeof clientChatUnsubscribe === 'function') { clientChatUnsubscribe(); clientChatUnsubscribe = null; }
-                if (typeof clientOrderUnsubscribe === 'function') { clientOrderUnsubscribe(); clientOrderUnsubscribe = null; }
                 if (typeof adminChatUnsubscribe === 'function') { adminChatUnsubscribe(); adminChatUnsubscribe = null; }
                 adminActiveClientIndex = -1;
             }

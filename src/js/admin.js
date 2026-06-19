@@ -447,6 +447,16 @@ function showClientChat(client) {
     var statusNames = { new: 'Новый', in_progress: 'В работе', completed: 'Готово', cancelled: 'Отменён' };
     var statusColors = { new: '#1565c0', in_progress: '#e65100', completed: '#2e7d32', cancelled: '#c62828' };
 
+    var allMessages = [];
+    client.orders.forEach(function(p) {
+        if (p.messages && p.messages.length) {
+            p.messages.forEach(function(m) {
+                allMessages.push(Object.assign({}, m, { _projectDocId: p._docId }));
+            });
+        }
+    });
+    allMessages.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+
     var html = '<div class="admin-chat__header">';
     html += '<div class="admin-chat__header-info">';
     html += '<div class="admin-chat__header-avatar">' + escapeHtml(client.name.charAt(0).toUpperCase()) + '</div>';
@@ -460,16 +470,21 @@ function showClientChat(client) {
     });
     html += '</div></div>';
 
-    var sortedMessages = client.allMessages.slice().sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
-
     html += '<div class="admin-chat__messages" id="admin-chat-messages">';
-    if (sortedMessages.length === 0) {
+    if (allMessages.length === 0) {
         html += '<div class="admin-chat__no-messages"><p>Нет сообщений</p></div>';
     } else {
-        sortedMessages.forEach(function(msg) {
+        allMessages.forEach(function(msg) {
             var isAdmin = msg.from === 'admin';
             html += '<div class="admin-chat__msg ' + (isAdmin ? 'admin-chat__msg--admin' : 'admin-chat__msg--user') + '">';
-            html += '<div class="admin-chat__msg-bubble">' + escapeHtml(msg.text) + '</div>';
+            html += '<div class="admin-chat__msg-bubble">';
+            if (msg.image) {
+                html += '<img src="' + msg.image + '" class="admin-chat__image" style="max-width:240px;border-radius:8px;cursor:pointer;" onclick="window.open(this.src)">';
+                if (msg.text) html += '<div style="margin-top:6px;">' + escapeHtml(msg.text) + '</div>';
+            } else {
+                html += escapeHtml(msg.text);
+            }
+            html += '</div>';
             html += '<div class="admin-chat__msg-meta">';
             html += '<span class="admin-chat__msg-date">' + escapeHtml(new Date(msg.date).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})) + '</span>';
             html += '</div></div>';
@@ -478,9 +493,13 @@ function showClientChat(client) {
     html += '</div>';
 
     html += '<div class="admin-chat__input-area">';
+    html += '<div class="admin-chat__input-wrap">';
+    html += '<div id="admin-chat-image-preview" class="admin-chat__image-preview" style="display:none;"><img id="admin-chat-preview-img"><button id="admin-chat-remove-img">&times;</button></div>';
+    html += '<div class="admin-chat__input-row">';
+    html += '<label class="admin-chat__attach-btn" title="Прикрепить фото"><input type="file" id="admin-chat-file" accept="image/*" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></label>';
     html += '<input type="text" id="admin-chat-input" placeholder="Сообщение..." class="admin-chat__input">';
     html += '<button id="admin-chat-send" class="admin-chat__send-btn">Отправить</button>';
-    html += '</div>';
+    html += '</div></div></div>';
 
     main.innerHTML = html;
 
@@ -489,20 +508,93 @@ function showClientChat(client) {
 
     var chatInput = document.getElementById('admin-chat-input');
     var chatSend = document.getElementById('admin-chat-send');
+    var fileInput = document.getElementById('admin-chat-file');
+    var previewWrap = document.getElementById('admin-chat-image-preview');
+    var previewImg = document.getElementById('admin-chat-preview-img');
+    var removeImg = document.getElementById('admin-chat-remove-img');
+
+    var pendingImage = null;
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (fileInput.files && fileInput.files[0]) {
+                pendingImage = fileInput.files[0];
+                previewImg.src = URL.createObjectURL(pendingImage);
+                previewWrap.style.display = 'flex';
+                fileInput.value = '';
+            }
+        });
+    }
+
+    if (removeImg) {
+        removeImg.addEventListener('click', function() {
+            pendingImage = null;
+            previewWrap.style.display = 'none';
+            previewImg.src = '';
+        });
+    }
+
+    var chatMain = document.getElementById('admin-chat-main');
+    if (chatMain) {
+        chatMain.addEventListener('dragover', function(e) { e.preventDefault(); });
+        chatMain.addEventListener('drop', function(e) {
+            e.preventDefault();
+            var files = e.dataTransfer.files;
+            if (files && files[0] && files[0].type.startsWith('image/')) {
+                pendingImage = files[0];
+                previewImg.src = URL.createObjectURL(pendingImage);
+                previewWrap.style.display = 'flex';
+            }
+        });
+    }
+
+    if (chatInput) {
+        chatInput.addEventListener('paste', function(e) {
+            var items = e.clipboardData && e.clipboardData.items;
+            if (!items) return;
+            for (var i = 0; i < items.length; i++) {
+                if (items[i].type.startsWith('image/')) {
+                    pendingImage = items[i].getAsFile();
+                    previewImg.src = URL.createObjectURL(pendingImage);
+                    previewWrap.style.display = 'flex';
+                    e.preventDefault();
+                    break;
+                }
+            }
+        });
+    }
 
     function sendMessage() {
         var text = sanitizeInput(chatInput.value, 500);
-        if (!text) return;
+        if (!text && !pendingImage) return;
 
         var targetProject = client.orders.find(function(p) {
             return p.messages && p.messages.length < 50;
         }) || client.orders[0];
         if (!targetProject) return;
 
-        var currentMessages = targetProject.messages || [];
-        currentMessages.push({ from: 'admin', text: text, date: new Date().toISOString() });
+        if (pendingImage) {
+            var imgFile = pendingImage;
+            pendingImage = null;
+            previewWrap.style.display = 'none';
+            previewImg.src = '';
 
-        db.collection('projects').doc(targetProject._docId).update({ messages: currentMessages });
+            var storageRef = storage.ref('chat_images/' + Date.now() + '_' + imgFile.name);
+            storageRef.put(imgFile).then(function(snapshot) {
+                return snapshot.ref.getDownloadURL();
+            }).then(function(url) {
+                var currentMessages = targetProject.messages || [];
+                currentMessages.push({ from: 'admin', text: text || '', date: new Date().toISOString(), image: url });
+                return db.collection('projects').doc(targetProject._docId).update({ messages: currentMessages });
+            }).catch(function(err) {
+                console.error('Ошибка загрузки фото:', err);
+                alert('Не удалось загрузить фото');
+            });
+        } else {
+            var currentMessages = targetProject.messages || [];
+            currentMessages.push({ from: 'admin', text: text, date: new Date().toISOString() });
+            db.collection('projects').doc(targetProject._docId).update({ messages: currentMessages });
+        }
 
         chatInput.value = '';
     }

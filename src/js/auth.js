@@ -507,9 +507,19 @@ function renderClientChat() {
     if (clientChatUnsubscribe) { clientChatUnsubscribe(); clientChatUnsubscribe = null; }
 
     container.innerHTML = '<div class="admin-chat">' +
-        '<div class="admin-chat__sidebar" id="client-chat-sidebar"><div class="admin-chat__empty"><p>Загрузка...</p></div></div>' +
-        '<div class="admin-chat__main" id="client-chat-main"><div class="admin-chat__placeholder"><p>Выберите заказ для чата</p></div></div>' +
+        '<div class="admin-chat__main admin-chat__main--full" id="client-chat-main">' +
+        '<div class="admin-chat__header">' +
+        '<div class="admin-chat__header-info">' +
+        '<div class="admin-chat__header-avatar" style="background:#f98130;">E</div>' +
+        '<div><div class="admin-chat__header-name">EnotSpace</div>' +
+        '<div class="admin-chat__header-contact">Поддержка</div></div>' +
+        '</div></div>' +
+        '<div class="admin-chat__messages" id="client-chat-messages"><div class="admin-chat__no-messages"><p>Загрузка...</p></div></div>' +
+        '<div class="admin-chat__input-area" id="client-chat-input-area">' +
+        '<div class="admin-chat__drop-zone" id="client-chat-drop"><img id="client-chat-preview" style="display:none;max-height:60px;border-radius:8px;margin-bottom:8px;"><input type="text" id="client-chat-input" placeholder="Сообщение..." class="admin-chat__input"><button id="client-chat-send" class="admin-chat__send-btn">Отправить</button></div>' +
         '</div>';
+
+    var clientUnreadChat = null;
 
     clientChatUnsubscribe = db.collection('projects').where('userId', '==', user.id).onSnapshot(function(snapshot) {
         var projects = [];
@@ -519,137 +529,171 @@ function renderClientChat() {
         projects.sort(function(a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
         clientProjectsCache = projects;
 
-        var sidebar = document.getElementById('client-chat-sidebar');
-        if (!sidebar) return;
-
-        if (projects.length === 0) {
-            sidebar.innerHTML = '<div class="admin-chat__empty"><p>Нет заказов</p></div>';
-            return;
-        }
-
-        var typeNames = { fullcycle: 'Полный цикл', print: 'Печать', modeling: 'Моделирование', scanning: 'Сканирование', order: 'Каталог' };
-        var statusNames = { new: 'Новый', in_progress: 'В работе', completed: 'Готово', cancelled: 'Отменён' };
-
-        var activeIdx = sidebar.querySelector('.admin-chat__client.active');
-        var activeIdxVal = activeIdx ? parseInt(activeIdx.dataset.index) : -1;
-
-        var html = '<div class="admin-chat__sidebar-header"><h3>Мои заказы</h3></div>';
-        html += '<div class="admin-chat__client-list">';
-        projects.forEach(function(p, i) {
-            var lastMsg = (p.messages && p.messages.length) ? p.messages[p.messages.length - 1] : null;
-            var preview = lastMsg ? lastMsg.text.substring(0, 40) + (lastMsg.text.length > 40 ? '...' : '') : 'Нет сообщений';
-            var date = lastMsg ? new Date(lastMsg.date).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}) : '';
-            var typeName = typeNames[p.type] || p.type || 'Заказ';
-
-            html += '<div class="admin-chat__client' + (i === activeIdxVal ? ' active' : '') + '" data-index="' + i + '">';
-            html += '<div class="admin-chat__client-avatar">' + escapeHtml(typeName.charAt(0)) + '</div>';
-            html += '<div class="admin-chat__client-info">';
-            html += '<div class="admin-chat__client-name">' + escapeHtml(typeName) + ' <span style="font-weight:400;color:#999;font-size:12px;">' + escapeHtml(statusNames[p.status] || p.status) + '</span></div>';
-            html += '<div class="admin-chat__client-last">' + escapeHtml(preview) + '</div>';
-            html += '</div>';
-            html += '<div class="admin-chat__client-meta">';
-            html += '<div class="admin-chat__client-date">' + escapeHtml(date) + '</div>';
-            html += '</div>';
-            html += '</div>';
+        var allMessages = [];
+        projects.forEach(function(p) {
+            if (p.messages && p.messages.length) {
+                p.messages.forEach(function(m) {
+                    allMessages.push(Object.assign({}, m, { _projectDocId: p._docId }));
+                });
+            }
         });
-        html += '</div>';
-        sidebar.innerHTML = html;
+        allMessages.sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
 
-        sidebar.querySelectorAll('.admin-chat__client').forEach(function(item) {
-            item.addEventListener('click', function() {
-                sidebar.querySelectorAll('.admin-chat__client').forEach(function(el) { el.classList.remove('active'); });
-                item.classList.add('active');
-                var idx = parseInt(item.dataset.index);
-                showClientOrderChat(clientProjectsCache[idx]);
-            });
-        });
-
-        if (activeIdxVal >= 0 && activeIdxVal < projects.length) {
-            showClientOrderChat(projects[activeIdxVal]);
-        }
+        clientUnreadChat = { projects: projects, allMessages: allMessages };
+        renderUnifiedChatMessages(allMessages, projects);
+        setupUnifiedChatInput(projects);
     }).catch(function(err) {
         console.error('Ошибка загрузки чата:', err);
     });
 }
 
-var clientOrderUnsubscribe = null;
-
-function showClientOrderChat(project) {
+function renderUnifiedChatMessages(allMessages, projects) {
     var main = document.getElementById('client-chat-main');
     if (!main) return;
 
-    if (clientOrderUnsubscribe) { clientOrderUnsubscribe(); clientOrderUnsubscribe = null; }
-
     var typeNames = { fullcycle: 'Полный цикл', print: 'Печать', modeling: 'Моделирование', scanning: 'Сканирование', order: 'Каталог' };
-    var statusNames = { new: 'Новый', in_progress: 'В работе', completed: 'Готово', cancelled: 'Отменён' };
-    var statusColors = { new: '#1565c0', in_progress: '#e65100', completed: '#2e7d32', cancelled: '#c62828' };
 
-    var typeName = typeNames[project.type] || project.type || 'Заказ';
-    var color = statusColors[project.status] || '#666';
+    var html = '<div class="admin-chat__header">';
+    html += '<div class="admin-chat__header-info">';
+    html += '<div class="admin-chat__header-avatar" style="background:#f98130;">Ч</html>';
+    html += '<div><div class="admin-chat__header-name">Чат с поддержкой</div>';
+    html += '<div class="admin-chat__header-contact">Все ваши заказы в одном чате</div></div>';
+    html += '</div></div>';
 
-    function renderMessages(doc) {
-        var data = doc.data();
-        if (!data) return;
+    html += '<div class="admin-chat__messages" id="client-chat-messages">';
+    if (allMessages.length === 0) {
+        html += '<div class="admin-chat__no-messages"><p>Нет сообщений. Напишите первый!</p></div>';
+    } else {
+        allMessages.forEach(function(msg) {
+            var isUser = msg.from === 'user';
+            html += '<div class="admin-chat__msg ' + (isUser ? 'admin-chat__msg--admin' : 'admin-chat__msg--user') + '">';
+            html += '<div class="admin-chat__msg-bubble">';
+            if (msg.image) {
+                html += '<img src="' + msg.image + '" class="admin-chat__image" style="max-width:240px;border-radius:8px;cursor:pointer;" onclick="window.open(this.src)">';
+                if (msg.text) html += '<div style="margin-top:6px;">' + escapeHtml(msg.text) + '</div>';
+            } else {
+                html += escapeHtml(msg.text);
+            }
+            html += '</div>';
+            html += '<div class="admin-chat__msg-meta">';
+            html += '<span class="admin-chat__msg-date">' + escapeHtml(new Date(msg.date).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})) + '</span>';
+            html += '</div></div>';
+        });
+    }
+    html += '</div>';
 
-        var html = '<div class="admin-chat__header">';
-        html += '<div class="admin-chat__header-info">';
-        html += '<div class="admin-chat__header-avatar" style="background:' + color + ';">' + escapeHtml(typeName.charAt(0)) + '</div>';
-        html += '<div><div class="admin-chat__header-name">' + escapeHtml(typeName) + '</div>';
-        html += '<div class="admin-chat__header-contact">Статус: ' + escapeHtml(statusNames[data.status] || data.status) + '</div></div>';
-        html += '</div>';
-        html += '<div class="admin-chat__header-orders">';
-        html += '<span class="admin-chat__order-badge" style="background:' + color + '22;color:' + color + ';">' + escapeHtml(data.id || '') + '</span>';
-        html += '</div></div>';
+    html += '<div class="admin-chat__input-area">';
+    html += '<div class="admin-chat__input-wrap">';
+    html += '<div id="client-chat-image-preview" class="admin-chat__image-preview" style="display:none;"><img id="client-chat-preview-img"><button id="client-chat-remove-img">&times;</button></div>';
+    html += '<div class="admin-chat__input-row">';
+    html += '<label class="admin-chat__attach-btn" title="Прикрепить фото"><input type="file" id="client-chat-file" accept="image/*" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></label>';
+    html += '<input type="text" id="client-chat-input" placeholder="Сообщение..." class="admin-chat__input">';
+    html += '<button id="client-chat-send" class="admin-chat__send-btn">Отправить</button>';
+    html += '</div></div>';
 
-        var sortedMessages = (data.messages || []).slice().sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+    main.innerHTML = html;
 
-        html += '<div class="admin-chat__messages" id="client-chat-messages">';
-        if (sortedMessages.length === 0) {
-            html += '<div class="admin-chat__no-messages"><p>Нет сообщений. Напишите первый!</p></div>';
-        } else {
-            sortedMessages.forEach(function(msg) {
-                var isUser = msg.from === 'user';
-                html += '<div class="admin-chat__msg ' + (isUser ? 'admin-chat__msg--admin' : 'admin-chat__msg--user') + '">';
-                html += '<div class="admin-chat__msg-bubble">' + escapeHtml(msg.text) + '</div>';
-                html += '<div class="admin-chat__msg-meta">';
-                html += '<span class="admin-chat__msg-date">' + escapeHtml(new Date(msg.date).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})) + '</span>';
-                html += '</div></div>';
-            });
-        }
-        html += '</div>';
+    var messagesEl = document.getElementById('client-chat-messages');
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+}
 
-        html += '<div class="admin-chat__input-area">';
-        html += '<input type="text" id="client-chat-input" placeholder="Сообщение..." class="admin-chat__input">';
-        html += '<button id="client-chat-send" class="admin-chat__send-btn">Отправить</button>';
-        html += '</div>';
+function setupUnifiedChatInput(projects) {
+    var chatInput = document.getElementById('client-chat-input');
+    var chatSend = document.getElementById('client-chat-send');
+    var fileInput = document.getElementById('client-chat-file');
+    var previewWrap = document.getElementById('client-chat-image-preview');
+    var previewImg = document.getElementById('client-chat-preview-img');
+    var removeImg = document.getElementById('client-chat-remove-img');
+    if (!chatInput || !chatSend) return;
 
-        main.innerHTML = html;
+    var pendingImage = null;
 
-        var messagesEl = document.getElementById('client-chat-messages');
-        messagesEl.scrollTop = messagesEl.scrollHeight;
-
-        var chatInput = document.getElementById('client-chat-input');
-        var chatSend = document.getElementById('client-chat-send');
-
-        function sendMessage() {
-            var text = sanitizeInput(chatInput.value, 500);
-            if (!text) return;
-
-            var currentMessages = data.messages || [];
-            currentMessages.push({ from: 'user', text: text, date: new Date().toISOString() });
-
-            db.collection('projects').doc(project._docId).update({ messages: currentMessages });
-
-            chatInput.value = '';
-        }
-
-        chatSend.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') sendMessage();
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (fileInput.files && fileInput.files[0]) {
+                pendingImage = fileInput.files[0];
+                var url = URL.createObjectURL(pendingImage);
+                previewImg.src = url;
+                previewWrap.style.display = 'flex';
+                fileInput.value = '';
+            }
         });
     }
 
-    clientOrderUnsubscribe = db.collection('projects').doc(project._docId).onSnapshot(function(doc) {
-        renderMessages(doc);
+    if (removeImg) {
+        removeImg.addEventListener('click', function() {
+            pendingImage = null;
+            previewWrap.style.display = 'none';
+            previewImg.src = '';
+        });
+    }
+
+    var dropZone = document.getElementById('client-chat-main');
+    if (dropZone) {
+        dropZone.addEventListener('dragover', function(e) { e.preventDefault(); });
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            var files = e.dataTransfer.files;
+            if (files && files[0] && files[0].type.startsWith('image/')) {
+                pendingImage = files[0];
+                var url = URL.createObjectURL(pendingImage);
+                previewImg.src = url;
+                previewWrap.style.display = 'flex';
+            }
+        });
+    }
+
+    if (chatInput) {
+        chatInput.addEventListener('paste', function(e) {
+            var items = e.clipboardData && e.clipboardData.items;
+            if (!items) return;
+            for (var i = 0; i < items.length; i++) {
+                if (items[i].type.startsWith('image/')) {
+                    pendingImage = items[i].getAsFile();
+                    var url = URL.createObjectURL(pendingImage);
+                    previewImg.src = url;
+                    previewWrap.style.display = 'flex';
+                    e.preventDefault();
+                    break;
+                }
+            }
+        });
+    }
+
+    function sendMessage() {
+        var text = sanitizeInput(chatInput.value, 500);
+        if (!text && !pendingImage) return;
+
+        var targetProject = projects[0];
+        if (!targetProject) return;
+
+        if (pendingImage) {
+            var storageRef = storage.ref('chat_images/' + Date.now() + '_' + pendingImage.name);
+            storageRef.put(pendingImage).then(function(snapshot) {
+                return snapshot.ref.getDownloadURL();
+            }).then(function(url) {
+                var msg = { from: 'user', text: text || '', date: new Date().toISOString(), image: url };
+                var currentMessages = targetProject.messages || [];
+                currentMessages.push(msg);
+                return db.collection('projects').doc(targetProject._docId).update({ messages: currentMessages });
+            }).catch(function(err) {
+                console.error('Ошибка загрузки фото:', err);
+                alert('Не удалось загрузить фото');
+            });
+            pendingImage = null;
+            previewWrap.style.display = 'none';
+            previewImg.src = '';
+        } else {
+            var currentMessages = targetProject.messages || [];
+            currentMessages.push({ from: 'user', text: text, date: new Date().toISOString() });
+            db.collection('projects').doc(targetProject._docId).update({ messages: currentMessages });
+        }
+
+        chatInput.value = '';
+    }
+
+    chatSend.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
     });
 }
