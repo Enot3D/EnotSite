@@ -101,13 +101,20 @@
 [data-theme="dark"] .services { color: var(--text); }
 [data-theme="dark"] .services__title { color: var(--text); }
 [data-theme="dark"] .services__subtitle { color: var(--text-secondary); }
-[data-theme="dark"] .service-card { background: var(--card-bg); box-shadow: 0 4px 24px var(--shadow); }
+[data-theme="dark"] .service-card--light { background: var(--card-bg); box-shadow: 0 4px 24px var(--shadow); }
+[data-theme="dark"] .service-card--light .service-card__title { color: var(--text); }
+[data-theme="dark"] .service-card--light .service-card__subtitle-text { color: var(--primary); }
+[data-theme="dark"] .service-card--light .service-card__description { color: var(--text-secondary); }
+[data-theme="dark"] .service-card--light .service-card__btn { background: var(--primary); color: #fff; }
+[data-theme="dark"] .service-card--light .service-card__btn:hover { background: var(--primary-hover); }
+[data-theme="dark"] .service-card--orange { background: var(--primary); }
+[data-theme="dark"] .service-card--orange .service-card__title { color: #fff; }
+[data-theme="dark"] .service-card--orange .service-card__subtitle-text { color: #fff; }
+[data-theme="dark"] .service-card--orange .service-card__description { color: rgba(255,255,255,0.9); }
+[data-theme="dark"] .service-card--orange .service-card__formats { color: #fff; }
+[data-theme="dark"] .service-card--orange .service-card__btn--white { background: #fff; color: var(--primary); }
+[data-theme="dark"] .service-card--orange .service-card__btn--white:hover { background: #f5f5f5; }
 [data-theme="dark"] .service-card:hover { box-shadow: 0 16px 48px var(--shadow-lg); }
-[data-theme="dark"] .service-card::before { background: var(--primary); }
-[data-theme="dark"] .service-card__title { color: var(--text); }
-[data-theme="dark"] .service-card__description { color: var(--text-secondary); }
-[data-theme="dark"] .service-card__features li { color: var(--text-secondary); }
-[data-theme="dark"] .service-card__action { border-color: var(--border); }
 [data-theme="dark"] .services__help { color: var(--text-muted); }
 
 /* Service Pages */
