@@ -1746,6 +1746,16 @@
     grid-column: 1 / -1;
 }
 
+.client-chat {
+    display: flex;
+    flex-direction: column;
+    height: 560px;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
 .admin-chat__input-wrap {
     flex: 1;
 }

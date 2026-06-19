@@ -506,18 +506,15 @@ function renderClientChat() {
 
     if (clientChatUnsubscribe) { clientChatUnsubscribe(); clientChatUnsubscribe = null; }
 
-    container.innerHTML = '<div class="admin-chat">' +
-        '<div class="admin-chat__main admin-chat__main--full" id="client-chat-main">' +
+    container.innerHTML = '<div class="client-chat">' +
         '<div class="admin-chat__header">' +
         '<div class="admin-chat__header-info">' +
-        '<div class="admin-chat__header-avatar" style="background:#f98130;">E</div>' +
-        '<div><div class="admin-chat__header-name">EnotSpace</div>' +
-        '<div class="admin-chat__header-contact">Поддержка</div></div>' +
+        '<div class="admin-chat__header-avatar" style="background:#f98130;">Ч</div>' +
+        '<div><div class="admin-chat__header-name">Чат с поддержкой</div>' +
+        '<div class="admin-chat__header-contact">Все ваши заказы в одном чате</div></div>' +
         '</div></div>' +
         '<div class="admin-chat__messages" id="client-chat-messages"><div class="admin-chat__no-messages"><p>Загрузка...</p></div></div>' +
-        '<div class="admin-chat__input-area" id="client-chat-input-area">' +
-        '<div class="admin-chat__drop-zone" id="client-chat-drop"><img id="client-chat-preview" style="display:none;max-height:60px;border-radius:8px;margin-bottom:8px;"><input type="text" id="client-chat-input" placeholder="Сообщение..." class="admin-chat__input"><button id="client-chat-send" class="admin-chat__send-btn">Отправить</button></div>' +
-        '</div>';
+        '<div class="admin-chat__input-area" id="client-chat-input-area"></div>';
 
     var clientUnreadChat = null;
 
@@ -548,21 +545,15 @@ function renderClientChat() {
 }
 
 function renderUnifiedChatMessages(allMessages, projects) {
-    var main = document.getElementById('client-chat-main');
-    if (!main) return;
+    var container = document.getElementById('tab-client-chat');
+    if (!container) return;
 
-    var typeNames = { fullcycle: 'Полный цикл', print: 'Печать', modeling: 'Моделирование', scanning: 'Сканирование', order: 'Каталог' };
+    var messagesEl = document.getElementById('client-chat-messages');
+    if (!messagesEl) return;
 
-    var html = '<div class="admin-chat__header">';
-    html += '<div class="admin-chat__header-info">';
-    html += '<div class="admin-chat__header-avatar" style="background:#f98130;">Ч</html>';
-    html += '<div><div class="admin-chat__header-name">Чат с поддержкой</div>';
-    html += '<div class="admin-chat__header-contact">Все ваши заказы в одном чате</div></div>';
-    html += '</div></div>';
-
-    html += '<div class="admin-chat__messages" id="client-chat-messages">';
+    var html = '';
     if (allMessages.length === 0) {
-        html += '<div class="admin-chat__no-messages"><p>Нет сообщений. Напишите первый!</p></div>';
+        html = '<div class="admin-chat__no-messages"><p>Нет сообщений. Напишите первый!</p></div>';
     } else {
         allMessages.forEach(function(msg) {
             var isUser = msg.from === 'user';
@@ -580,24 +571,23 @@ function renderUnifiedChatMessages(allMessages, projects) {
             html += '</div></div>';
         });
     }
-    html += '</div>';
-
-    html += '<div class="admin-chat__input-area">';
-    html += '<div class="admin-chat__input-wrap">';
-    html += '<div id="client-chat-image-preview" class="admin-chat__image-preview" style="display:none;"><img id="client-chat-preview-img"><button id="client-chat-remove-img">&times;</button></div>';
-    html += '<div class="admin-chat__input-row">';
-    html += '<label class="admin-chat__attach-btn" title="Прикрепить фото"><input type="file" id="client-chat-file" accept="image/*" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></label>';
-    html += '<input type="text" id="client-chat-input" placeholder="Сообщение..." class="admin-chat__input">';
-    html += '<button id="client-chat-send" class="admin-chat__send-btn">Отправить</button>';
-    html += '</div></div>';
-
-    main.innerHTML = html;
-
-    var messagesEl = document.getElementById('client-chat-messages');
+    messagesEl.innerHTML = html;
     messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
 function setupUnifiedChatInput(projects) {
+    var inputArea = document.getElementById('client-chat-input-area');
+    if (!inputArea || inputArea.dataset.initialized) return;
+    inputArea.dataset.initialized = '1';
+
+    inputArea.innerHTML = '<div class="admin-chat__input-wrap">' +
+        '<div id="client-chat-image-preview" class="admin-chat__image-preview" style="display:none;"><img id="client-chat-preview-img"><button id="client-chat-remove-img">&times;</button></div>' +
+        '<div class="admin-chat__input-row">' +
+        '<label class="admin-chat__attach-btn" title="Прикрепить фото"><input type="file" id="client-chat-file" accept="image/*" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></label>' +
+        '<input type="text" id="client-chat-input" placeholder="Сообщение..." class="admin-chat__input">' +
+        '<button id="client-chat-send" class="admin-chat__send-btn">Отправить</button>' +
+        '</div></div>';
+
     var chatInput = document.getElementById('client-chat-input');
     var chatSend = document.getElementById('client-chat-send');
     var fileInput = document.getElementById('client-chat-file');
@@ -628,7 +618,7 @@ function setupUnifiedChatInput(projects) {
         });
     }
 
-    var dropZone = document.getElementById('client-chat-main');
+    var dropZone = document.getElementById('tab-client-chat');
     if (dropZone) {
         dropZone.addEventListener('dragover', function(e) { e.preventDefault(); });
         dropZone.addEventListener('drop', function(e) {
