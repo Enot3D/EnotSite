@@ -65,10 +65,6 @@
 [data-theme="dark"] .product-card__admin-btn--edit:hover { background: var(--primary); color: #fff; }
 [data-theme="dark"] .product-card__admin-btn--delete { background: rgba(30,30,30,0.9); color: var(--danger); }
 [data-theme="dark"] .product-card__admin-btn--delete:hover { background: var(--danger); color: #fff; }
-[data-theme="dark"] .product-card__admin-btn--edit { background: rgba(30,30,30,0.9); color: var(--primary); }
-[data-theme="dark"] .product-card__admin-btn--edit:hover { background: var(--primary); color: #fff; }
-[data-theme="dark"] .product-card__admin-btn--delete { background: rgba(30,30,30,0.9); color: var(--danger); }
-[data-theme="dark"] .product-card__admin-btn--delete:hover { background: var(--danger); color: #fff; }
 
 /* Product Modal */
 [data-theme="dark"] .product-modal__content { background: var(--surface); }

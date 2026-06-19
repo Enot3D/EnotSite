@@ -60,7 +60,7 @@ function renderDashboard() {
         db.collection('users').get()
     ]).then(function(results) {
         var projects = [];
-        results[0].forEach(function(doc) { projects.push(doc.data()); });
+        results[0].forEach(function(doc) { projects.push(Object.assign({ id: doc.id }, doc.data())); });
         var usersCount = results[1].size;
 
         var total = projects.length;
@@ -227,7 +227,7 @@ function showAdminOrderDetail(p) {
     html += '<div class="order-detail__info"><h3>Информация</h3><div class="order-detail__grid">';
     html += '<div class="order-detail__field"><span>Тип</span><strong>' + escapeHtml(typeNames[p.type] || p.type) + '</strong></div>';
     if (p.urgency) html += '<div class="order-detail__field"><span>Срочность</span><strong>' + escapeHtml(urgencyNames[p.urgency] || p.urgency) + '</strong></div>';
-    if (p.quantity) html += '<div class="order-detail__field"><span>Количество</span><strong>' + p.quantity + ' шт.</strong></div>';
+    if (p.quantity) html += '<div class="order-detail__field"><span>Количество</span><strong>' + parseInt(p.quantity) + ' шт.</strong></div>';
     if (p.material) html += '<div class="order-detail__field"><span>Материал</span><strong>' + escapeHtml(p.material) + '</strong></div>';
     if (p.file) html += '<div class="order-detail__field"><span>Файл</span><strong>' + escapeHtml(p.file) + '</strong></div>';
     if (p.price) html += '<div class="order-detail__field"><span>Стоимость</span><strong>' + escapeHtml(p.price) + ' ₽</strong></div>';

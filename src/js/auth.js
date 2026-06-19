@@ -557,7 +557,7 @@ function renderUnifiedChatMessages(allMessages, projects) {
     } else {
         allMessages.forEach(function(msg) {
             var isUser = msg.from === 'user';
-            html += '<div class="admin-chat__msg ' + (isUser ? 'admin-chat__msg--admin' : 'admin-chat__msg--user') + '">';
+            html += '<div class="admin-chat__msg ' + (isUser ? 'admin-chat__msg--user' : 'admin-chat__msg--admin') + '">';
             html += '<div class="admin-chat__msg-bubble">';
             if (msg.image) {
                 html += '<img src="' + msg.image + '" class="admin-chat__image" style="max-width:240px;border-radius:8px;cursor:pointer;" onclick="window.open(this.src)">';

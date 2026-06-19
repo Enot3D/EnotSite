@@ -1820,38 +1820,3 @@
     display: block;
     border-radius: 8px;
 }
-    .admin-grid {
-        grid-template-columns: 1fr;
-    }
-    .admin-order {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-    .admin-orders__header {
-        flex-direction: column;
-        gap: 12px;
-        align-items: flex-start;
-    }
-    .admin-form__row {
-        grid-template-columns: 1fr;
-    }
-    .catalog-admin-bar {
-        flex-direction: column;
-    }
-    .cat-add {
-        flex-direction: column;
-    }
-    .admin-chat {
-        grid-template-columns: 1fr;
-        height: 450px;
-    }
-    .admin-chat__sidebar {
-        border-right: none;
-        border-bottom: 1px solid #f0f0f0;
-        max-height: 200px;
-    }
-    .admin-chat__main {
-        min-height: 350px;
-    }
-}
