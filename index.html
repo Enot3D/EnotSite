@@ -99,6 +99,13 @@
             if (!routes[page]) page = 'catalog';
             var key = routes[page];
 
+            if (page !== 'account') {
+                if (typeof clientChatUnsubscribe === 'function') { clientChatUnsubscribe(); clientChatUnsubscribe = null; }
+                if (typeof clientOrderUnsubscribe === 'function') { clientOrderUnsubscribe(); clientOrderUnsubscribe = null; }
+                if (typeof adminChatUnsubscribe === 'function') { adminChatUnsubscribe(); adminChatUnsubscribe = null; }
+                adminActiveClientIndex = -1;
+            }
+
             if (page === 'favorites') {
                 document.getElementById('main-placeholder').innerHTML = renderFavoritesPage();
                 updateActiveLink(page);

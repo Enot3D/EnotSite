@@ -335,17 +335,22 @@ function renderUsers() {
 }
 
 var adminChatData = { clients: [], allProjects: [] };
+var adminChatUnsubscribe = null;
+var adminActiveClientIndex = -1;
 
 function renderAdminChat() {
     var container = document.getElementById('tab-admin-chat');
     if (!container) return;
+
+    if (adminChatUnsubscribe) { adminChatUnsubscribe(); adminChatUnsubscribe = null; }
+    adminActiveClientIndex = -1;
 
     container.innerHTML = '<div class="admin-chat">' +
         '<div class="admin-chat__sidebar" id="admin-chat-sidebar"><div class="admin-chat__empty"><p>Загрузка...</p></div></div>' +
         '<div class="admin-chat__main" id="admin-chat-main"><div class="admin-chat__placeholder"><p>Выберите клиента</p></div></div>' +
         '</div>';
 
-    db.collection('projects').orderBy('createdAt', 'desc').get().then(function(snapshot) {
+    adminChatUnsubscribe = db.collection('projects').orderBy('createdAt', 'desc').onSnapshot(function(snapshot) {
         var allProjects = [];
         snapshot.forEach(function(doc) {
             allProjects.push(Object.assign({ _docId: doc.id }, doc.data()));
@@ -381,6 +386,10 @@ function renderAdminChat() {
         adminChatData.clients = clients;
 
         renderChatSidebar(clients);
+
+        if (adminActiveClientIndex >= 0 && adminActiveClientIndex < clients.length) {
+            showClientChat(clients[adminActiveClientIndex]);
+        }
     }).catch(function(err) {
         console.error('Ошибка загрузки чатов:', err);
         container.querySelector('#admin-chat-sidebar').innerHTML = '<div class="admin-chat__empty"><p>Ошибка загрузки</p></div>';
@@ -404,7 +413,7 @@ function renderChatSidebar(clients) {
         var preview = lastMsg ? lastMsg.text.substring(0, 40) + (lastMsg.text.length > 40 ? '...' : '') : 'Нет сообщений';
         var date = lastMsg ? new Date(lastMsg.date).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}) : '';
 
-        html += '<div class="admin-chat__client" data-index="' + i + '">';
+        html += '<div class="admin-chat__client' + (i === adminActiveClientIndex ? ' active' : '') + '" data-index="' + i + '">';
         html += '<div class="admin-chat__client-avatar">' + escapeHtml(c.name.charAt(0).toUpperCase()) + '</div>';
         html += '<div class="admin-chat__client-info">';
         html += '<div class="admin-chat__client-name">' + escapeHtml(c.name) + '</div>';
@@ -424,6 +433,7 @@ function renderChatSidebar(clients) {
             sidebar.querySelectorAll('.admin-chat__client').forEach(function(el) { el.classList.remove('active'); });
             item.classList.add('active');
             var idx = parseInt(item.dataset.index);
+            adminActiveClientIndex = idx;
             showClientChat(clients[idx]);
         });
     });
@@ -489,21 +499,12 @@ function showClientChat(client) {
         }) || client.orders[0];
         if (!targetProject) return;
 
-        if (!targetProject.messages) targetProject.messages = [];
-        targetProject.messages.push({ from: 'admin', text: text, date: new Date().toISOString() });
-        client.allMessages.push({ from: 'admin', text: text, date: new Date().toISOString() });
+        var currentMessages = targetProject.messages || [];
+        currentMessages.push({ from: 'admin', text: text, date: new Date().toISOString() });
 
-        db.collection('projects').doc(targetProject._docId).update({ messages: targetProject.messages });
+        db.collection('projects').doc(targetProject._docId).update({ messages: currentMessages });
 
         chatInput.value = '';
-
-        var msgHtml = '<div class="admin-chat__msg admin-chat__msg--admin">';
-        msgHtml += '<div class="admin-chat__msg-bubble">' + escapeHtml(text) + '</div>';
-        msgHtml += '<div class="admin-chat__msg-meta">';
-        msgHtml += '<span class="admin-chat__msg-date">' + escapeHtml(new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})) + '</span>';
-        msgHtml += '</div></div>';
-        messagesEl.insertAdjacentHTML('beforeend', msgHtml);
-        messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
     chatSend.addEventListener('click', sendMessage);
