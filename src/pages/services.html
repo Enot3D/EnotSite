@@ -6,106 +6,72 @@
 
     <div class="services__grid">
 
-        <div class="service-card service-card--full" data-service="fullcycle">
-            <div class="service-card__icon">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="23 4 23 10 17 10"></polyline>
-                    <polyline points="1 20 1 14 7 14"></polyline>
-                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                </svg>
-            </div>
-            <div class="service-card__content">
-                <h2 class="service-card__title">Полный цикл</h2>
-                <p class="service-card__description">
-                    Сломалась деталь, а чертежей нет? Мы восстановим модель по образцу
-                    и напечатаем замену. Всё в одном месте — от скана до готовой детали.
-                </p>
-                <ul class="service-card__features">
-                    <li>Сканирование сломанной детали</li>
-                    <li>Восстановление и моделирование</li>
-                    <li>Печать и доставка готового изделия</li>
-                </ul>
-            </div>
-            <div class="service-card__action">
-                <span class="service-card__cta">Начать проект</span>
-                <span class="service-card__arrow">&rarr;</span>
+        <div class="service-card service-card--light" data-service="fullcycle">
+            <div class="service-card__body">
+                <div class="service-card__text">
+                    <h2 class="service-card__title">ПОЛНЫЙ ЦИКЛ СОЗДАНИЯ ИЗДЕЛИЯ</h2>
+                    <p class="service-card__subtitle-text">От идеи до готовой детали</p>
+                    <p class="service-card__description">
+                        Создание изделия полностью под ключ: анализ задачи, разработка 3D-модели,
+                        подготовка производства, печать и обработка готового изделия.
+                    </p>
+                    <a href="fullcycle.html" class="service-card__btn">Заказать проект &rarr;</a>
+                </div>
+                <div class="service-card__image">
+                    <img src="../assets/images/services/fullcycle.png" alt="Полный цикл создания изделия">
+                </div>
             </div>
         </div>
 
-        <div class="service-card" data-service="print">
-            <div class="service-card__icon">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                    <rect x="6" y="14" width="12" height="8"></rect>
-                </svg>
-            </div>
-            <div class="service-card__content">
-                <h2 class="service-card__title">3D-печать по модели</h2>
-                <p class="service-card__description">
-                    У вас уже есть 3D-файл? Мы напечатаем его на профессиональном оборудовании.
-                    Просто загрузите модель — мы сделаем остальное.
-                </p>
-                <ul class="service-card__features">
-                    <li>Печать из пластика, смолы, металла</li>
-                    <li>Любая сложность и размер</li>
-                    <li>Готово от 1 дня</li>
-                </ul>
-            </div>
-            <div class="service-card__action">
-                <span class="service-card__cta">Заказать печать</span>
-                <span class="service-card__arrow">&rarr;</span>
+        <div class="service-card service-card--orange" data-service="print">
+            <div class="service-card__body">
+                <div class="service-card__image">
+                    <img src="../assets/images/services/print.png" alt="3D-печать по вашей модели">
+                </div>
+                <div class="service-card__text">
+                    <h2 class="service-card__title">3D-ПЕЧАТЬ ПО ВАШЕЙ МОДЕЛИ</h2>
+                    <p class="service-card__subtitle-text">Изготовление деталей из готового файла</p>
+                    <p class="service-card__description">
+                        Печать изделий по вашим 3D-моделям с подбором материала,
+                        настройкой качества и подготовкой модели к производству.
+                    </p>
+                    <p class="service-card__formats">Работаем с форматами: STL, STEP, OBJ, 3MF</p>
+                    <a href="print_by_model.html" class="service-card__btn service-card__btn--white">Рассчитать стоимость &rarr;</a>
+                </div>
             </div>
         </div>
 
-        <div class="service-card" data-service="modeling">
-            <div class="service-card__icon">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                </svg>
-            </div>
-            <div class="service-card__content">
-                <h2 class="service-card__title">3D-моделирование</h2>
-                <p class="service-card__description">
-                    Создадим 3D-модель с нуля по вашему описанию, чертежу или эскизу.
-                    Точные размеры, идеальная геометрия.
-                </p>
-                <ul class="service-card__features">
-                    <li>По чертежу, фото или описанию</li>
-                    <li>Parametric и художественное моделирование</li>
-                    <li>Исправление и доработка ваших моделей</li>
-                </ul>
-            </div>
-            <div class="service-card__action">
-                <span class="service-card__cta">Заказать модель</span>
-                <span class="service-card__arrow">&rarr;</span>
+        <div class="service-card service-card--orange" data-service="modeling">
+            <div class="service-card__body">
+                <div class="service-card__text">
+                    <h2 class="service-card__title">3D-МОДЕЛИРОВАНИЕ</h2>
+                    <p class="service-card__subtitle-text">Создание точных цифровых моделей</p>
+                    <p class="service-card__description">
+                        Разрабатываем 3D-модели деталей, корпусов и механизмов по чертежам,
+                        фотографиям или техническому заданию.
+                    </p>
+                    <a href="modeling.html" class="service-card__btn service-card__btn--white">Создать модель &rarr;</a>
+                </div>
+                <div class="service-card__image">
+                    <img src="../assets/images/services/modeling.png" alt="3D-моделирование">
+                </div>
             </div>
         </div>
 
-        <div class="service-card" data-service="scanning">
-            <div class="service-card__icon">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-            </div>
-            <div class="service-card__content">
-                <h2 class="service-card__title">3D-сканирование</h2>
-                <p class="service-card__description">
-                    Оцифруем реальный объект — получите точную 3D-модель
-                    с сохранением всех деталей поверхности.
-                </p>
-                <ul class="service-card__features">
-                    <li>Точность до 0.05 мм</li>
-                    <li>Любые размеры и материалы</li>
-                    <li>Готовый файл для печати или работы</li>
-                </ul>
-            </div>
-            <div class="service-card__action">
-                <span class="service-card__cta">Заказать сканирование</span>
-                <span class="service-card__arrow">&rarr;</span>
+        <div class="service-card service-card--light" data-service="scanning">
+            <div class="service-card__body">
+                <div class="service-card__image">
+                    <img src="../assets/images/services/scanning.png" alt="3D-сканирование">
+                </div>
+                <div class="service-card__text">
+                    <h2 class="service-card__title">3D-СКАНИРОВАНИЕ</h2>
+                    <p class="service-card__subtitle-text">Перевод физических объектов в цифровой формат</p>
+                    <p class="service-card__description">
+                        Получение точной 3D-копии существующих деталей и объектов для
+                        дальнейшего моделирования или производства.
+                    </p>
+                    <a href="scanning.html" class="service-card__btn">Заказать сканирование &rarr;</a>
+                </div>
             </div>
         </div>
 
