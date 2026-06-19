@@ -201,6 +201,11 @@
         if (typeof setupFavoritesNav === 'function') setupFavoritesNav();
         if (typeof initTheme === 'function') initTheme();
 
+        var loginBtn = document.getElementById('login-btn');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', function() { openAuth(); });
+        }
+
         document.getElementById('auth-placeholder').innerHTML = PAGES.auth_modal;
         document.getElementById('footer-placeholder').innerHTML = PAGES.footer;
         initAuth();
